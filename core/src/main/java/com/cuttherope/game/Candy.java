@@ -10,6 +10,8 @@ package com.cuttherope.game;
  */
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 
@@ -25,12 +27,14 @@ public class Candy {
     public boolean collected = false;
     public boolean fallen    = false;
 
-    // Gravedad más suave para que el dulce caiga naturalmente
-    private static final float GRAVITY     = -380f;   // px/s²
-    // Amortiguación del aire
-    private static final float DAMPING     = 0.995f;
-    // Velocidad máxima para evitar que salga disparado
-    private static final float MAX_SPEED   = 600f;
+    // Gravedad más fuerte para que el caramelo tenga caída natural tipo Cut the Rope
+    private static final float GRAVITY     = -620f;   // px/s²
+    // Menos fricción: conserva mejor el momentum al salir de la cuerda
+    private static final float DAMPING     = 0.998f;
+    // Velocidad máxima más alta para permitir balanceos reales
+    private static final float MAX_SPEED   = 900f;
+    private static final float RELEASE_BOOST = 1.28f;
+    private static final float MIN_RELEASE_SPEED = 230f;
 
     public Candy(float x, float y) {
         position = new Vector2(x, y);
@@ -51,12 +55,25 @@ public class Candy {
 
     /** Establece la velocidad inicial cuando se suelta de todas las cuerdas. */
     public void releaseWithVelocity(float vx, float vy) {
-        // Limitar velocidad de lanzamiento para que no salga disparado
+        // Al cortar, el dulce debe heredar el momentum tangencial de la cuerda.
+        vx *= RELEASE_BOOST;
+        vy *= RELEASE_BOOST;
+
         float speed = (float) Math.sqrt(vx * vx + vy * vy);
-        if (speed > 300f) {
-            vx = vx / speed * 300f;
-            vy = vy / speed * 300f;
+
+        // Si el cálculo llega muy bajo, se aplica un mínimo suave para evitar
+        // que el caramelo caiga muerto sin alcanzar las estrellas.
+        if (speed > 0.001f && speed < MIN_RELEASE_SPEED) {
+            vx = vx / speed * MIN_RELEASE_SPEED;
+            vy = vy / speed * MIN_RELEASE_SPEED;
+            speed = MIN_RELEASE_SPEED;
         }
+
+        if (speed > MAX_SPEED) {
+            vx = vx / speed * MAX_SPEED;
+            vy = vy / speed * MAX_SPEED;
+        }
+
         velocity.set(vx, vy);
     }
 
@@ -81,9 +98,8 @@ public class Candy {
 
     /** Ya no usa impulso externo: la velocidad la asigna releaseWithVelocity */
     public void applyImpulse(float ix, float iy) {
-        // mantener por compatibilidad pero limitar fuertemente
         float speed = (float) Math.sqrt(ix * ix + iy * iy);
-        if (speed > 150f) { ix = ix / speed * 150f; iy = iy / speed * 150f; }
+        if (speed > MAX_SPEED) { ix = ix / speed * MAX_SPEED; iy = iy / speed * MAX_SPEED; }
         velocity.add(ix, iy);
     }
 
@@ -92,4 +108,17 @@ public class Candy {
             || position.x < -radius * 3
             || position.x > screenW + radius * 3;
     }
+
+    private static Texture candyTexture;
+
+    public void draw(SpriteBatch batch) {
+        if (collected) return;
+        if (candyTexture == null) candyTexture = AssetPaths.texture(AssetPaths.CANDY);
+        batch.draw(candyTexture, position.x - radius, position.y - radius, radius * 2f, radius * 2f);
+    }
+
+    public static void disposeTexture() {
+        if (candyTexture != null) { candyTexture.dispose(); candyTexture = null; }
+    }
+
 }

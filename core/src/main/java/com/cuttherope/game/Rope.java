@@ -34,6 +34,13 @@ public class Rope {
     private float anchorX, anchorY;
     private float segmentLength;
 
+    // Velocidad real del extremo que sostiene el dulce.
+    // Antes se calculaba contra prevNodes[last], pero ese valor no se actualizaba
+    // correctamente para el último nodo. Por eso al cortar la cuerda el dulce
+    // perdía momentum y caía lento.
+    private final Vector2 tipVelocity = new Vector2();
+    private final Vector2 previousTipPosition = new Vector2();
+
     public Rope(float anchorX, float anchorY, Candy candy, Color color) {
         this.anchorX = anchorX;
         this.anchorY = anchorY;
@@ -65,6 +72,9 @@ public class Rope {
         float dt = Math.min(delta, 0.033f);
 
         int total = nodes.length;
+
+        // Guardar dónde estaba el extremo del dulce al iniciar este frame.
+        previousTipPosition.set(nodes[total - 1]);
 
         // Forzar último nodo en la posición actual del dulce
         nodes[total - 1].set(candy.position);
@@ -111,10 +121,17 @@ public class Rope {
             nodes[0].set(anchorX, anchorY);
         }
 
-        // Propagar posición del último nodo al dulce
+        // Calcular momentum real del extremo inferior después de resolver la cuerda.
+        tipVelocity.set(
+            (nodes[total - 1].x - previousTipPosition.x) / dt,
+            (nodes[total - 1].y - previousTipPosition.y) / dt
+        );
+
+        // Propagar posición del último nodo al dulce mientras esta cuerda está activa.
+        // NO se borra candy.velocity aquí: si se corta en este frame, GameScreen
+        // puede transferir esta velocidad al dulce sin perder impulso.
         if (!candy.collected && !candy.fallen) {
             candy.position.set(nodes[total - 1]);
-            candy.velocity.set(0, 0);
         }
     }
 
@@ -123,12 +140,11 @@ public class Rope {
      * Se calcula como desplazamiento entre frame actual y anterior.
      */
     public Vector2 getTipVelocity(float delta) {
-        float dt = Math.max(delta, 0.001f);
-        int last = nodes.length - 1;
-        return new Vector2(
-            (nodes[last].x - prevNodes[last].x) / dt,
-            (nodes[last].y - prevNodes[last].y) / dt
-        );
+        return new Vector2(tipVelocity);
+    }
+
+    public Vector2 getTipPosition() {
+        return new Vector2(nodes[nodes.length - 1]);
     }
 
     public void draw(ShapeRenderer sr) {

@@ -10,6 +10,8 @@ package com.cuttherope.game;
  */
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 /**
@@ -114,4 +116,17 @@ public class OmNom {
         float dy = candy.position.y - y;
         return Math.sqrt(dx * dx + dy * dy) < (radius + candy.radius);
     }
+
+    private static Texture omNomTexture;
+
+    public void draw(SpriteBatch batch) {
+        if (omNomTexture == null) omNomTexture = AssetPaths.texture(AssetPaths.OMNOM);
+        float size = radius * 2.4f;
+        batch.draw(omNomTexture, x - size / 2f, y - radius * 0.55f, size, size);
+    }
+
+    public static void disposeTexture() {
+        if (omNomTexture != null) { omNomTexture.dispose(); omNomTexture = null; }
+    }
+
 }

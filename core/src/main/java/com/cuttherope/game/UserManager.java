@@ -18,14 +18,16 @@ import java.util.*;
  * de usuarios en archivos binarios (serialización Java).
  *
  * Estructura de carpetas:
- *   data/users/<username>/profile.bin   ← UserData serializado
- *   data/users/<username>/prefs.bin     ← preferencias extra (futuro uso)
+ *   usuario/<nombreUsuario>/usuario.dat   ← UserData serializado en binario
+ *
+ * Ejemplo:
+ *   usuario/jeremias/usuario.dat
  */
 public class UserManager {
 
     private static UserManager instance;
 
-    private static final String BASE_DIR = "data/users/";
+    private static final String BASE_DIR = "usuario/";
 
     private UserData currentUser;               // usuario en sesión
     private Map<String, Integer> rankingCache;  // username → score
@@ -127,7 +129,7 @@ public class UserManager {
     public void saveUser(UserData ud) {
         File dir = new File(BASE_DIR + ud.getUsername());
         dir.mkdirs();
-        File file = new File(dir, "profile.bin");
+        File file = new File(dir, "usuario.dat");
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
             oos.writeObject(ud);
         } catch (IOException e) {
@@ -136,7 +138,7 @@ public class UserManager {
     }
 
     public UserData loadUser(String username) {
-        File file = new File(BASE_DIR + username + "/profile.bin");
+        File file = new File(BASE_DIR + username + "/usuario.dat");
         if (!file.exists()) return null;
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
             return (UserData) ois.readObject();
@@ -147,7 +149,7 @@ public class UserManager {
     }
 
     public boolean userExists(String username) {
-        return new File(BASE_DIR + username.trim().toLowerCase() + "/profile.bin").exists();
+        return new File(BASE_DIR + username.trim().toLowerCase() + "/usuario.dat").exists();
     }
 
     /** Guarda el progreso del usuario actual tras una partida. */

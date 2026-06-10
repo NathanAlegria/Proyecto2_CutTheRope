@@ -12,10 +12,12 @@ package com.cuttherope.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 
 import com.cuttherope.game.LevelData;
 import com.cuttherope.game.UserData;
@@ -38,6 +40,7 @@ public class GameScreen extends Juego implements Screen {
     private final LevelData[] allLevels;
     private LevelData currentLevelData;
     private ShapeRenderer sr;
+    private Texture fondo;
 
     // ── Entidades del nivel ───────────────────────────────────────────────────
     private Candy candy;
@@ -238,21 +241,34 @@ public class GameScreen extends Juego implements Screen {
             candy.releaseWithVelocity(lastTipVx, lastTipVy);
         }
 
-        // Con múltiples cuerdas activas se conserva el comportamiento original
-        if (activeRopesAfter > 1) {
-            float px = 0;
-            float py = 0;
+        // Si todavía hay cuerdas activas, el dulce queda sostenido por el promedio
+        // de los extremos. Esto evita que la última cuerda actualizada "gane" y
+        // corrige el balanceo con varias sogas.
+        if (activeRopesAfter > 0) {
+            Vector2 avgPos = new Vector2();
+            Vector2 avgVel = new Vector2();
+            int count = 0;
 
             for (Rope r : ropes) {
                 if (!r.isCut()) {
-                    px += candy.position.x;
-                    py += candy.position.y;
+                    avgPos.add(r.getTipPosition());
+                    avgVel.add(r.getTipVelocity(delta));
+                    count++;
                 }
+            }
+
+            if (count > 0) {
+                avgPos.scl(1f / count);
+                avgVel.scl(1f / count);
+                candy.position.set(avgPos);
+                candy.velocity.set(avgVel);
+                lastTipVx = avgVel.x;
+                lastTipVy = avgVel.y;
             }
         }
 
         // Si todas las cuerdas están cortadas, el caramelo cae libremente
-        if (allCut) {
+        if (activeRopesAfter == 0) {
             candy.update(delta);
         }
 
@@ -352,35 +368,17 @@ public class GameScreen extends Juego implements Screen {
 
         LevelData d = currentLevelData;
 
-        Gdx.gl.glClearColor(d.bgColor1.r, d.bgColor1.g, d.bgColor1.b, 1f);
+        Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // Fondo mejorado sin cambiar la lógica
-        sr.begin(ShapeRenderer.ShapeType.Filled);
-
-        sr.setColor(d.bgColor1);
-        sr.rect(0, 350f, 800, 350f);
-
-        sr.setColor(d.bgColor2);
-        sr.rect(0, 0, 800, 350f);
-
-        // Decoraciones suaves
-        sr.setColor(new Color(1f, 1f, 1f, 0.08f));
-        sr.circle(90, 590, 58);
-        sr.circle(720, 555, 74);
-
-        sr.setColor(new Color(0f, 0f, 0f, 0.10f));
-        sr.rect(0, 0, 800, 82);
-
-        sr.setColor(new Color(1f, 1f, 1f, 0.08f));
-        sr.rect(0, 80, 800, 3);
-
-        sr.end();
+        game.batch.begin();
+        if (fondo != null) {
+            game.batch.draw(fondo, 0, 0, 800, 700);
+        }
+        game.batch.end();
 
         // Entidades
         sr.begin(ShapeRenderer.ShapeType.Filled);
-
-        omNom.draw(sr);
 
         for (Star s : stars) {
             s.draw(sr);
@@ -390,8 +388,6 @@ public class GameScreen extends Juego implements Screen {
             r.draw(sr);
         }
 
-        candy.draw(sr);
-
         // Línea de corte del dedo
         if (cutting) {
             sr.setColor(new Color(1f, 1f, 1f, 0.6f));
@@ -399,6 +395,11 @@ public class GameScreen extends Juego implements Screen {
         }
 
         sr.end();
+
+        game.batch.begin();
+        omNom.draw(game.batch);
+        candy.draw(game.batch);
+        game.batch.end();
 
         drawHUD();
 
@@ -625,6 +626,14 @@ public class GameScreen extends Juego implements Screen {
 
     // ── Input ──────────────────────────────────────────────────────────────────
 
+    private int countActiveRopes() {
+        int count = 0;
+        for (Rope r : ropes) {
+            if (!r.isCut()) count++;
+        }
+        return count;
+    }
+
     private void handleTouchInput() {
         if (state != GameState.PLAYING) {
             return;
@@ -650,9 +659,22 @@ public class GameScreen extends Juego implements Screen {
 
             // Intentar cortar cuerdas con el trayecto actual
             for (Rope r : ropes) {
+                if (r.isCut()) continue;
+
+                // Capturar la velocidad ANTES de cortar. Si se corta primero,
+                // en el siguiente update ya no queda cuerda activa y el dulce
+                // no recibe momentum.
+                Vector2 releaseVelocity = r.getTipVelocity(Gdx.graphics.getDeltaTime());
+
                 if (r.trycut(cutStartX, cutStartY, cutCurrentX, cutCurrentY)) {
                     game.audioManager.playCut();
                     addScore(100);
+
+                    // Si esta era la última soga, transferir inmediatamente
+                    // el momentum al caramelo.
+                    if (countActiveRopes() == 0) {
+                        candy.releaseWithVelocity(releaseVelocity.x, releaseVelocity.y);
+                    }
 
                     cutStartX = mx;
                     cutStartY = my;
@@ -850,6 +872,7 @@ public class GameScreen extends Juego implements Screen {
     @Override
     public void show() {
         sr = new ShapeRenderer();
+        fondo = AssetPaths.texture(AssetPaths.FONDO);
 
         game.applyRuntimePreferences(um.getCurrentUser());
         game.audioManager.playGameMusic();
@@ -889,6 +912,9 @@ public class GameScreen extends Juego implements Screen {
 
         if (sr != null) {
             sr.dispose();
+        }
+        if (fondo != null) {
+            fondo.dispose();
         }
     }
 }
