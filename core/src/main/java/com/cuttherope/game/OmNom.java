@@ -39,16 +39,16 @@ public class OmNom {
     /** Aplica el color del avatar al cuerpo de Om Nom. */
     public void setAvatarColor(String avatarId) {
         switch (avatarId) {
-            case "avatar2": bodyColor = new Color(0.2f,0.4f,0.9f,1f);
-                            bellyColor= new Color(0.5f,0.65f,1f,1f);  break;
-            case "avatar3": bodyColor = new Color(0.9f,0.3f,0.3f,1f);
-                            bellyColor= new Color(1f,0.6f,0.6f,1f);   break;
-            case "avatar4": bodyColor = new Color(0.9f,0.6f,0.1f,1f);
-                            bellyColor= new Color(1f,0.8f,0.4f,1f);   break;
-            case "avatar5": bodyColor = new Color(0.7f,0.2f,0.9f,1f);
-                            bellyColor= new Color(0.9f,0.6f,1f,1f);   break;
-            default:        bodyColor = new Color(0.2f,0.75f,0.2f,1f);
-                            bellyColor= new Color(0.55f,0.9f,0.4f,1f); break;
+            case "avatar2": avatarIndex = 1; bodyColor = new Color(0.9f,0.15f,0.15f,1f);
+                            bellyColor= new Color(1f,0.45f,0.45f,1f);   break;
+            case "avatar3": avatarIndex = 2; bodyColor = new Color(0.7f,0.2f,0.9f,1f);
+                            bellyColor= new Color(0.9f,0.55f,1f,1f);    break;
+            case "avatar4": avatarIndex = 3; bodyColor = new Color(0.2f,0.4f,0.9f,1f);
+                            bellyColor= new Color(0.5f,0.65f,1f,1f);    break;
+            case "avatar5": avatarIndex = 4; bodyColor = new Color(0.95f,0.68f,0.08f,1f);
+                            bellyColor= new Color(1f,0.85f,0.35f,1f);   break;
+            default:        avatarIndex = 0; bodyColor = new Color(0.2f,0.75f,0.2f,1f);
+                            bellyColor= new Color(0.55f,0.9f,0.4f,1f);  break;
         }
     }
 
@@ -117,16 +117,40 @@ public class OmNom {
         return Math.sqrt(dx * dx + dy * dy) < (radius + candy.radius);
     }
 
-    private static Texture omNomTexture;
+    private static final Texture[] omNomTextures = new Texture[5];
+    private int avatarIndex = 0;
+
+    private Texture getAvatarTexture() {
+        if (avatarIndex < 0 || avatarIndex >= omNomTextures.length) avatarIndex = 0;
+        if (omNomTextures[avatarIndex] == null) {
+            int n = avatarIndex + 1;
+            omNomTextures[avatarIndex] = AssetPaths.textureAnyOrNull(
+                "OmNom" + n + ".png",
+                "omnom" + n + ".png",
+                "OmNom " + n + ".png",
+                "omnom " + n + ".png",
+                "OmNom" + n + ".jpg",
+                "omnom" + n + ".jpg"
+            );
+        }
+        return omNomTextures[avatarIndex];
+    }
 
     public void draw(SpriteBatch batch) {
-        if (omNomTexture == null) omNomTexture = AssetPaths.texture(AssetPaths.OMNOM);
-        float size = radius * 2.4f;
-        batch.draw(omNomTexture, x - size / 2f, y - radius * 0.55f, size, size);
+        Texture tex = getAvatarTexture();
+        if (tex != null) {
+            float size = radius * 2.65f;
+            batch.draw(tex, x - size / 2f, y - radius * 0.62f, size, size);
+        }
     }
 
     public static void disposeTexture() {
-        if (omNomTexture != null) { omNomTexture.dispose(); omNomTexture = null; }
+        for (int i = 0; i < omNomTextures.length; i++) {
+            if (omNomTextures[i] != null) {
+                omNomTextures[i].dispose();
+                omNomTextures[i] = null;
+            }
+        }
     }
 
 }

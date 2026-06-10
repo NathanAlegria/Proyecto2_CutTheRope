@@ -12,6 +12,7 @@ package com.cuttherope.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
@@ -52,12 +53,14 @@ public class SettingsScreen implements Screen {
     private final Rectangle[] btnAvatars = new Rectangle[5];
 
     private static final Color[] AVATAR_COLORS = {
-        new Color(0.2f, 0.75f, 0.2f, 1f),
-        new Color(0.2f, 0.4f,  0.9f, 1f),
-        new Color(0.9f, 0.3f,  0.3f, 1f),
-        new Color(0.9f, 0.6f,  0.1f, 1f),
-        new Color(0.7f, 0.2f,  0.9f, 1f),
+        new Color(0.2f, 0.75f, 0.2f, 1f),  // OmNom1 verde
+        new Color(0.9f, 0.15f, 0.15f, 1f), // OmNom2 rojo
+        new Color(0.7f, 0.2f, 0.9f, 1f),  // OmNom3 morado
+        new Color(0.2f, 0.4f, 0.9f, 1f),  // OmNom4 azul
+        new Color(0.95f, 0.68f, 0.08f, 1f) // OmNom5 amarillo
     };
+
+    private static final Texture[] OMNOM_AVATAR_TEXTURES = new Texture[5];
 
     public SettingsScreen(MainGame game) {
         this.game = game;
@@ -227,43 +230,81 @@ public class SettingsScreen implements Screen {
             boolean sel = cur.equals("avatar" + (i + 1));
 
             sr.begin(ShapeRenderer.ShapeType.Filled);
-
-            sr.setColor(sel ? new Color(0.35f, 0.25f, 0.55f, 1f) : new Color(0.15f, 0.12f, 0.25f, 1f));
+            sr.setColor(sel ? new Color(0.28f, 0.22f, 0.42f, 1f) : new Color(0.11f, 0.10f, 0.14f, 1f));
             sr.rect(r.x, r.y, r.width, r.height);
-
-            sr.setColor(new Color(0f, 0f, 0f, 0.24f));
-            sr.circle(r.x + r.width / 2f + 3, r.y + r.height / 2f + 5, 28);
-
-            sr.setColor(AVATAR_COLORS[i]);
-            sr.circle(r.x + r.width / 2f, r.y + r.height / 2f + 8, 28);
-
-            sr.setColor(Color.WHITE);
-            sr.circle(r.x + r.width / 2f - 9, r.y + r.height / 2f + 14, 8);
-            sr.circle(r.x + r.width / 2f + 9, r.y + r.height / 2f + 14, 8);
-
-            sr.setColor(Color.BLACK);
-            sr.circle(r.x + r.width / 2f - 8, r.y + r.height / 2f + 13, 4);
-            sr.circle(r.x + r.width / 2f + 8, r.y + r.height / 2f + 13, 4);
-
-            if (sel) {
-                sr.setColor(new Color(1f, 0.85f, 0.2f, 1f));
-                sr.circle(r.x + r.width - 18, r.y + r.height - 18, 10);
-            }
-
             sr.end();
 
+            drawOmNomAvatar(r.x + r.width / 2f, r.y + 53, i, AVATAR_COLORS[i]);
+
             sr.begin(ShapeRenderer.ShapeType.Line);
-            sr.setColor(sel ? new Color(1f, 0.85f, 0.2f, 1f) : new Color(0.4f, 0.3f, 0.6f, 1f));
+            sr.setColor(sel ? new Color(1f, 0.85f, 0.2f, 1f) : new Color(0.55f, 0.45f, 0.70f, 1f));
             sr.rect(r.x, r.y, r.width, r.height);
             sr.end();
 
             game.batch.begin();
-
-            game.fontSmall.setColor(sel ? new Color(1f, 0.85f, 0.2f, 1f) : Color.WHITE);
-            game.fontSmall.draw(game.batch, sel ? "✓ A" + (i + 1) : "A" + (i + 1), r.x + 36, r.y + 18);
-
+            game.fontSmall.setColor(Color.WHITE);
+            game.fontSmall.draw(game.batch, "OmNom" + (i + 1), r.x + 28, r.y + 15);
             game.batch.end();
         }
+    }
+
+    private void drawOmNomAvatar(float cx, float cy, int index, Color body) {
+        Texture tex = getOmNomAvatarTexture(index);
+
+        if (tex != null) {
+            game.batch.begin();
+            float w = 74f;
+            float h = 74f;
+            game.batch.draw(tex, cx - w / 2f, cy - h / 2f - 2f, w, h);
+            game.batch.end();
+            return;
+        }
+
+        // Respaldo si falta una imagen: se dibuja una versión simple con el color correcto.
+        sr.begin(ShapeRenderer.ShapeType.Filled);
+
+        sr.setColor(new Color(0f, 0f, 0f, 0.38f));
+        sr.ellipse(cx - 35, cy - 34, 70, 20);
+
+        sr.setColor(body);
+        sr.circle(cx, cy, 31);
+        sr.rect(cx - 31, cy - 25, 62, 28);
+        sr.triangle(cx - 31, cy - 25, cx - 44, cy - 37, cx - 14, cy - 25);
+        sr.triangle(cx + 31, cy - 25, cx + 44, cy - 37, cx + 14, cy - 25);
+
+        sr.rectLine(cx, cy + 28, cx + 4, cy + 47, 4f);
+        sr.circle(cx + 5, cy + 49, 4);
+
+        sr.setColor(Color.BLACK);
+        sr.ellipse(cx - 27, cy - 7, 54, 30);
+
+        sr.setColor(Color.WHITE);
+        sr.triangle(cx - 18, cy - 5, cx - 10, cy - 5, cx - 14, cy - 15);
+        sr.triangle(cx + 10, cy - 5, cx + 18, cy - 5, cx + 14, cy - 15);
+
+        sr.circle(cx - 12, cy + 15, 9);
+        sr.circle(cx + 12, cy + 15, 9);
+        sr.setColor(Color.BLACK);
+        sr.circle(cx - 10, cy + 15, 4);
+        sr.circle(cx + 10, cy + 15, 4);
+
+        sr.end();
+    }
+
+    private Texture getOmNomAvatarTexture(int index) {
+        if (index < 0 || index >= OMNOM_AVATAR_TEXTURES.length) return null;
+        if (OMNOM_AVATAR_TEXTURES[index] == null) {
+            int n = index + 1;
+            OMNOM_AVATAR_TEXTURES[index] = AssetPaths.textureAnyOrNull(
+                "OmNom" + n + ".png",
+                "omnom" + n + ".png",
+                "OmNom " + n + ".png",
+                "omnom " + n + ".png",
+                "OmNom" + n + ".jpg",
+                "omnom" + n + ".jpg"
+            );
+        }
+        return OMNOM_AVATAR_TEXTURES[index];
     }
 
     private void drawSmallBtn(Rectangle r, String text) {
@@ -439,5 +480,7 @@ public class SettingsScreen implements Screen {
         if (sr != null) {
             sr.dispose();
         }
+        // No se eliminan las texturas aquí para no recargarlas cada vez que se abre Ajustes.
+        // Se liberan al cerrar la aplicación junto con el resto de recursos.
     }
 }

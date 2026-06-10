@@ -17,7 +17,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
 
 import com.cuttherope.game.LevelData;
 import com.cuttherope.game.UserData;
@@ -166,10 +165,6 @@ public class GameScreen extends Juego implements Screen {
         }
     }
 
-    // Guarda la velocidad de la punta en el frame anterior para transferirla al cortar
-    private float lastTipVx = 0;
-    private float lastTipVy = 0;
-
     @Override
     public void update(float delta) {
         if (state != GameState.PLAYING) {
@@ -188,88 +183,30 @@ public class GameScreen extends Juego implements Screen {
             return;
         }
 
-        // Contar cuerdas activas antes
-        int activeRopesBefore = 0;
+        float dt = Math.min(delta, 0.033f);
+
+        int activeRopes = 0;
         for (Rope r : ropes) {
             if (!r.isCut()) {
-                activeRopesBefore++;
+                activeRopes++;
             }
         }
 
-        // Guardar la velocidad de la punta antes de actualizar
-        if (activeRopesBefore > 0) {
-            float tvx = 0;
-            float tvy = 0;
-            int count = 0;
+        // El dulce SIEMPRE actualiza gravedad y velocidad.
+        // Antes, cuando había cuerdas, la soga le ponía velocity = 0 y por eso
+        // se quedaba pegado en el aire o caía sin momentum.
+        candy.update(dt);
 
-            for (Rope r : ropes) {
-                if (!r.isCut()) {
-                    com.badlogic.gdx.math.Vector2 tv = r.getTipVelocity(delta);
-                    tvx += tv.x;
-                    tvy += tv.y;
-                    count++;
+        // Después de aplicar gravedad, las cuerdas activas limitan la distancia
+        // al ancla. Eso conserva el componente tangencial y produce balanceo.
+        if (activeRopes > 0) {
+            for (int i = 0; i < 4; i++) {
+                for (Rope r : ropes) {
+                    if (!r.isCut()) {
+                        r.update(dt);
+                    }
                 }
             }
-
-            if (count > 0) {
-                lastTipVx = tvx / count;
-                lastTipVy = tvy / count;
-            }
-        }
-
-        // Actualizar cuerdas
-        boolean allCut = true;
-
-        for (Rope r : ropes) {
-            r.update(delta);
-
-            if (!r.isCut()) {
-                allCut = false;
-            }
-        }
-
-        // Contar cuerdas activas después
-        int activeRopesAfter = 0;
-        for (Rope r : ropes) {
-            if (!r.isCut()) {
-                activeRopesAfter++;
-            }
-        }
-
-        // Si se acaba de cortar la última cuerda, transferir velocidad al dulce
-        if (activeRopesAfter == 0 && activeRopesBefore > 0) {
-            candy.releaseWithVelocity(lastTipVx, lastTipVy);
-        }
-
-        // Si todavía hay cuerdas activas, el dulce queda sostenido por el promedio
-        // de los extremos. Esto evita que la última cuerda actualizada "gane" y
-        // corrige el balanceo con varias sogas.
-        if (activeRopesAfter > 0) {
-            Vector2 avgPos = new Vector2();
-            Vector2 avgVel = new Vector2();
-            int count = 0;
-
-            for (Rope r : ropes) {
-                if (!r.isCut()) {
-                    avgPos.add(r.getTipPosition());
-                    avgVel.add(r.getTipVelocity(delta));
-                    count++;
-                }
-            }
-
-            if (count > 0) {
-                avgPos.scl(1f / count);
-                avgVel.scl(1f / count);
-                candy.position.set(avgPos);
-                candy.velocity.set(avgVel);
-                lastTipVx = avgVel.x;
-                lastTipVy = avgVel.y;
-            }
-        }
-
-        // Si todas las cuerdas están cortadas, el caramelo cae libremente
-        if (activeRopesAfter == 0) {
-            candy.update(delta);
         }
 
         // Actualizar estrellas
@@ -626,14 +563,6 @@ public class GameScreen extends Juego implements Screen {
 
     // ── Input ──────────────────────────────────────────────────────────────────
 
-    private int countActiveRopes() {
-        int count = 0;
-        for (Rope r : ropes) {
-            if (!r.isCut()) count++;
-        }
-        return count;
-    }
-
     private void handleTouchInput() {
         if (state != GameState.PLAYING) {
             return;
@@ -659,22 +588,9 @@ public class GameScreen extends Juego implements Screen {
 
             // Intentar cortar cuerdas con el trayecto actual
             for (Rope r : ropes) {
-                if (r.isCut()) continue;
-
-                // Capturar la velocidad ANTES de cortar. Si se corta primero,
-                // en el siguiente update ya no queda cuerda activa y el dulce
-                // no recibe momentum.
-                Vector2 releaseVelocity = r.getTipVelocity(Gdx.graphics.getDeltaTime());
-
                 if (r.trycut(cutStartX, cutStartY, cutCurrentX, cutCurrentY)) {
                     game.audioManager.playCut();
                     addScore(100);
-
-                    // Si esta era la última soga, transferir inmediatamente
-                    // el momentum al caramelo.
-                    if (countActiveRopes() == 0) {
-                        candy.releaseWithVelocity(releaseVelocity.x, releaseVelocity.y);
-                    }
 
                     cutStartX = mx;
                     cutStartY = my;
@@ -872,7 +788,7 @@ public class GameScreen extends Juego implements Screen {
     @Override
     public void show() {
         sr = new ShapeRenderer();
-        fondo = AssetPaths.texture(AssetPaths.FONDO);
+        fondo = AssetPaths.textureOrNull(AssetPaths.FONDO);
 
         game.applyRuntimePreferences(um.getCurrentUser());
         game.audioManager.playGameMusic();

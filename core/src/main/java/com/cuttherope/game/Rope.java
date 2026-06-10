@@ -1,174 +1,138 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.cuttherope.game;
 
-/**
- *
- * @author Nathan
- */
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 
 /**
- * Rope - Simula una cuerda con física de partículas (Verlet).
- * Física corregida: sin impulso al cortar, el dulce hereda la velocidad
- * real de los nodos en ese momento.
+ * Rope - cuerda física tipo péndulo.
+ * La cuerda ya NO congela el dulce ni le pone velocidad 0.
+ * El dulce mantiene su velocidad real y la cuerda solo limita la distancia
+ * al ancla, dejando el componente tangencial para que se balancee.
  */
 public class Rope {
 
-    private static final int   SEGMENTS   = 12;
-    private static final float GRAVITY    = -480f;   // px/s²
-    private static final int   ITERATIONS = 8;       // más iteraciones = más estable
+    private static final int SEGMENTS = 14;
+    private static final int CONSTRAINT_ITERATIONS = 3;
 
-    private Vector2[] nodes;
-    private Vector2[] prevNodes;
-    private boolean[] nodePinned;
+    private final Vector2[] nodes;
+    private final Candy candy;
+    private final Color color;
+    private final float anchorX;
+    private final float anchorY;
+    private final float ropeLength;
 
-    private Candy   candy;
-    public  boolean cut = false;
-    private Color   color;
-
-    private float anchorX, anchorY;
-    private float segmentLength;
-
-    // Velocidad real del extremo que sostiene el dulce.
-    // Antes se calculaba contra prevNodes[last], pero ese valor no se actualizaba
-    // correctamente para el último nodo. Por eso al cortar la cuerda el dulce
-    // perdía momentum y caía lento.
-    private final Vector2 tipVelocity = new Vector2();
-    private final Vector2 previousTipPosition = new Vector2();
+    public boolean cut = false;
 
     public Rope(float anchorX, float anchorY, Candy candy, Color color) {
         this.anchorX = anchorX;
         this.anchorY = anchorY;
-        this.candy   = candy;
-        this.color   = color;
+        this.candy = candy;
+        this.color = color;
+        this.ropeLength = Math.max(30f, candy.position.dst(anchorX, anchorY));
+        this.nodes = new Vector2[SEGMENTS + 1];
 
-        int total  = SEGMENTS + 2;
-        nodes      = new Vector2[total];
-        prevNodes  = new Vector2[total];
-        nodePinned = new boolean[total];
-
-        float dx = (candy.position.x - anchorX) / (total - 1);
-        float dy = (candy.position.y - anchorY) / (total - 1);
-
-        for (int i = 0; i < total; i++) {
-            nodes[i]     = new Vector2(anchorX + dx * i, anchorY + dy * i);
-            prevNodes[i] = new Vector2(nodes[i]);
+        for (int i = 0; i < nodes.length; i++) {
+            float t = i / (float)(nodes.length - 1);
+            nodes[i] = new Vector2(
+                anchorX + (candy.position.x - anchorX) * t,
+                anchorY + (candy.position.y - anchorY) * t
+            );
         }
-        nodePinned[0] = true;
-
-        float totalLen = new Vector2(candy.position).sub(anchorX, anchorY).len();
-        segmentLength  = (totalLen / (total - 1)) * 1.02f;
     }
 
     public void update(float delta) {
-        if (cut) return;
+        if (cut || candy.collected || candy.fallen) return;
 
-        // Clamp delta para evitar explosiones si hay lag
-        float dt = Math.min(delta, 0.033f);
+        float dt = Math.max(0.001f, Math.min(delta, 0.033f));
 
-        int total = nodes.length;
-
-        // Guardar dónde estaba el extremo del dulce al iniciar este frame.
-        previousTipPosition.set(nodes[total - 1]);
-
-        // Forzar último nodo en la posición actual del dulce
-        nodes[total - 1].set(candy.position);
-
-        // Verlet integration en nodos intermedios
-        for (int i = 1; i < total - 1; i++) {
-            if (nodePinned[i]) continue;
-            Vector2 cur  = nodes[i];
-            Vector2 prev = prevNodes[i];
-            float vx = (cur.x - prev.x) * 0.98f;   // amortiguación leve
-            float vy = (cur.y - prev.y) * 0.98f;
-            prev.set(cur);
-            cur.x += vx;
-            cur.y += vy + GRAVITY * dt * dt;
+        // Varias pasadas dan estabilidad cuando hay más de una cuerda.
+        for (int i = 0; i < CONSTRAINT_ITERATIONS; i++) {
+            constrainCandy(dt);
         }
 
-        // Restricciones de longitud
-        for (int iter = 0; iter < ITERATIONS; iter++) {
-            // ancla siempre fija
-            nodes[0].set(anchorX, anchorY);
-
-            for (int i = 0; i < total - 1; i++) {
-                Vector2 a    = nodes[i];
-                Vector2 b    = nodes[i + 1];
-                float   dist = a.dst(b);
-                if (dist < 0.001f) continue;
-                float diff = (dist - segmentLength) / dist * 0.5f;
-                float offX = (b.x - a.x) * diff;
-                float offY = (b.y - a.y) * diff;
-                if (!nodePinned[i]) {
-                    a.x += offX;
-                    a.y += offY;
-                }
-                // El último nodo (dulce) puede moverse en restricción solo si
-                // no hay otra cuerda activa controlándolo — GameScreen lo maneja
-                if (i + 1 == total - 1) {
-                    b.x -= offX;
-                    b.y -= offY;
-                } else if (!nodePinned[i + 1]) {
-                    b.x -= offX;
-                    b.y -= offY;
-                }
-            }
-            nodes[0].set(anchorX, anchorY);
-        }
-
-        // Calcular momentum real del extremo inferior después de resolver la cuerda.
-        tipVelocity.set(
-            (nodes[total - 1].x - previousTipPosition.x) / dt,
-            (nodes[total - 1].y - previousTipPosition.y) / dt
-        );
-
-        // Propagar posición del último nodo al dulce mientras esta cuerda está activa.
-        // NO se borra candy.velocity aquí: si se corta en este frame, GameScreen
-        // puede transferir esta velocidad al dulce sin perder impulso.
-        if (!candy.collected && !candy.fallen) {
-            candy.position.set(nodes[total - 1]);
-        }
+        rebuildVisualNodes();
     }
 
     /**
-     * Velocidad actual del extremo inferior (para dársela al dulce al cortar).
-     * Se calcula como desplazamiento entre frame actual y anterior.
+     * Física tipo resorte-amortiguador.
+     * Antes la cuerda proyectaba el dulce a una posición exacta; con dos cuerdas
+     * eso lo podía dejar pegado en el aire. Ahora la cuerda aplica tensión a la
+     * velocidad del dulce y permite balanceo real con momentum.
      */
-    public Vector2 getTipVelocity(float delta) {
-        return new Vector2(tipVelocity);
+    private void constrainCandy(float dt) {
+        Vector2 radial = new Vector2(candy.position.x - anchorX, candy.position.y - anchorY);
+        float dist = radial.len();
+        if (dist < 0.0001f) return;
+
+        radial.scl(1f / dist);
+        float stretch = dist - ropeLength;
+
+        if (stretch > 0f) {
+            float radialVelocity = candy.velocity.dot(radial);
+
+            // Tensión: devuelve el dulce hacia el ancla sin matar el componente tangencial.
+            float stiffness = 34f;
+            float damping = 5.5f;
+            float tension = (stretch * stiffness) + (radialVelocity * damping);
+
+            candy.velocity.x -= radial.x * tension * dt;
+            candy.velocity.y -= radial.y * tension * dt;
+        }
+
+        // Límite de seguridad: evita que la cuerda se estire demasiado si hay lag,
+        // pero conserva la velocidad tangencial para que el caramelo siga oscilando.
+        float maxLen = ropeLength * 1.10f;
+        if (dist > maxLen) {
+            candy.position.set(anchorX + radial.x * maxLen, anchorY + radial.y * maxLen);
+            float radialVelocity = candy.velocity.dot(radial);
+            if (radialVelocity > 0f) {
+                candy.velocity.x -= radial.x * radialVelocity * 0.85f;
+                candy.velocity.y -= radial.y * radialVelocity * 0.85f;
+            }
+        }
     }
 
-    public Vector2 getTipPosition() {
-        return new Vector2(nodes[nodes.length - 1]);
+    private void rebuildVisualNodes() {
+        for (int i = 0; i < nodes.length; i++) {
+            float t = i / (float)(nodes.length - 1);
+            float x = anchorX + (candy.position.x - anchorX) * t;
+            float y = anchorY + (candy.position.y - anchorY) * t;
+
+            // Leve curva visual para que no parezca una línea rígida.
+            float sag = (float)Math.sin(t * Math.PI) * 4f;
+            nodes[i].set(x, y - sag);
+        }
+        nodes[0].set(anchorX, anchorY);
+        nodes[nodes.length - 1].set(candy.position);
+    }
+
+    public Vector2 getTipVelocity(float delta) {
+        return new Vector2(candy.velocity);
     }
 
     public void draw(ShapeRenderer sr) {
         if (cut) return;
+
         sr.setColor(color);
-        int total = nodes.length;
-        for (int i = 0; i < total - 1; i++) {
-            sr.rectLine(nodes[i].x, nodes[i].y,
-                        nodes[i + 1].x, nodes[i + 1].y, 3.5f);
+        for (int i = 0; i < nodes.length - 1; i++) {
+            sr.rectLine(nodes[i].x, nodes[i].y, nodes[i + 1].x, nodes[i + 1].y, 4f);
         }
-        sr.setColor(new Color(0.3f, 0.3f, 0.3f, 1f));
-        sr.circle(anchorX, anchorY, 7f);
+
+        sr.setColor(new Color(0.12f, 0.45f, 0.95f, 1f));
+        sr.circle(anchorX, anchorY, 8f);
+        sr.setColor(new Color(0.85f, 0.95f, 1f, 1f));
+        sr.circle(anchorX, anchorY, 4f);
     }
 
     public boolean trycut(float x1, float y1, float x2, float y2) {
         if (cut) return false;
-        int total = nodes.length;
-        for (int i = 0; i < total - 1; i++) {
+        for (int i = 0; i < nodes.length - 1; i++) {
             if (segmentsIntersect(x1, y1, x2, y2,
                     nodes[i].x, nodes[i].y,
                     nodes[i + 1].x, nodes[i + 1].y)) {
                 cut = true;
-                // NO aplicar impulso externo: la velocidad la toma GameScreen
-                // desde getTipVelocity() para que sea natural
+                // No se toca la velocidad del dulce. Sale con el momentum que ya tenía.
                 return true;
             }
         }
@@ -191,5 +155,6 @@ public class Rope {
 
     public float getAnchorX() { return anchorX; }
     public float getAnchorY() { return anchorY; }
-    public boolean isCut()    { return cut; }
+    public float getRopeLength() { return ropeLength; }
+    public boolean isCut() { return cut; }
 }

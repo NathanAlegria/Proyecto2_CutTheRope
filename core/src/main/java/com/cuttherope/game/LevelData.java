@@ -30,9 +30,12 @@ public class LevelData {
     }
 
     private static LevelData level2() {
+        // Ajustado al video de referencia:
+        // primero se corta la cuerda derecha, el dulce balancea hacia la izquierda,
+        // toma las estrellas laterales y luego cae hacia Om Nom usando el momentum.
         return new LevelData(1, "Segundo Nivel", "Usa el balanceo antes de cortar", 0, ROPE, BG1, BG2,
-                new float[]{520, 280, 392}, new float[]{610, 580, 350}, 430, 480, 575, 80,
-                new float[]{270, 230, 310}, new float[]{380, 285, 190}, 3);
+                new float[]{560, 300, 375}, new float[]{585, 555, 350}, 510, 455, 580, 80,
+                new float[]{255, 230, 315}, new float[]{360, 275, 170}, 3);
     }
 
     private static LevelData level3() {
