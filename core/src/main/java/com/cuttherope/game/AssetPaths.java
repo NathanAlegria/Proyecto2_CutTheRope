@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.Texture;
  */
 public final class AssetPaths {
     public static final String FONDO = "Fondo.png";
+    public static final String FONDO_MENU = "FondoMenu.png";
     public static final String CANDY = "Candy.png";
 
     public static final String OMNOM1 = "OmNom1.png";
