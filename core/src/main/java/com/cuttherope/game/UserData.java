@@ -57,6 +57,8 @@ public class UserData implements Serializable {
 
     // ── Social ──────────────────────────────────────────────────────────────
     private List<String> friends;     // usernames de amigos
+    private List<String> pendingFriendRequests; // solicitudes recibidas
+    private List<String> sentFriendRequests;    // solicitudes enviadas
     private int    totalScore;        // puntuación global para ranking
 
     // ────────────────────────────────────────────────────────────────────────
@@ -92,6 +94,8 @@ public class UserData implements Serializable {
         this.musicEnabled = Boolean.TRUE;
         this.sfxEnabled   = Boolean.TRUE;
         this.friends      = new ArrayList<>();
+        this.pendingFriendRequests = new ArrayList<>();
+        this.sentFriendRequests = new ArrayList<>();
         this.totalScore   = 0;
     }
 
@@ -175,8 +179,17 @@ public class UserData implements Serializable {
     public void    setMusicEnabled(boolean b){ this.musicEnabled = b; }
     public boolean isSfxEnabled()          { return sfxEnabled == null ? true : sfxEnabled.booleanValue(); }
     public void    setSfxEnabled(boolean b){ this.sfxEnabled = b; }
-    public List<String> getFriends()       { return friends; }
-    public void    addFriend(String u)     { if (!friends.contains(u)) friends.add(u); }
+    public List<String> getFriends()       { ensureSocialLists(); return friends; }
+    public List<String> getPendingFriendRequests() { ensureSocialLists(); return pendingFriendRequests; }
+    public List<String> getSentFriendRequests() { ensureSocialLists(); return sentFriendRequests; }
+    public void ensureSocialLists() {
+        if (friends == null) friends = new ArrayList<>();
+        if (pendingFriendRequests == null) pendingFriendRequests = new ArrayList<>();
+        if (sentFriendRequests == null) sentFriendRequests = new ArrayList<>();
+    }
+    public void    addFriend(String u)     { ensureSocialLists(); if (u != null && !friends.contains(u)) friends.add(u); }
+    public int     getStarsForLevel(int level) { return levelStars == null || level < 0 || level >= levelStars.length ? 0 : levelStars[level]; }
+    public long    getBestTimeForLevel(int level) { return bestTimePerLevel == null || level < 0 || level >= bestTimePerLevel.length ? 0L : bestTimePerLevel[level]; }
     public int     getTotalScore()         { return totalScore; }
 
     // ────────────────────────────────────────────────────────────────────────

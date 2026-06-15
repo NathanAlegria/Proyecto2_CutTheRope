@@ -17,10 +17,11 @@ public class MainMenuScreen implements Screen {
     private static final String[] LEVEL_LABELS = {"1-1","1-2","1-7","1-16","1-18"};
 
     // ── Botones inferiores ──
-    private final Rectangle btnStats    = new Rectangle(10,  15, 185, 45);
-    private final Rectangle btnSettings = new Rectangle(205, 15, 185, 45);
-    private final Rectangle btnRanking  = new Rectangle(400, 15, 185, 45);
-    private final Rectangle btnLogout   = new Rectangle(595, 15, 185, 45);
+    private final Rectangle btnStats    = new Rectangle(10,  15, 148, 45);
+    private final Rectangle btnSettings = new Rectangle(166, 15, 148, 45);
+    private final Rectangle btnRanking  = new Rectangle(322, 15, 148, 45);
+    private final Rectangle btnVersus   = new Rectangle(478, 15, 148, 45);
+    private final Rectangle btnLogout   = new Rectangle(634, 15, 148, 45);
 
     // Colores
     private static final Color NEGRO        = new Color(0.04f, 0.04f, 0.04f, 0.90f);
@@ -127,6 +128,7 @@ public class MainMenuScreen implements Screen {
         btnCeleste(btnStats,    "Estadísticas");
         btnCeleste(btnSettings, "Ajustes");
         btnCeleste(btnRanking,  "Ranking");
+        btnCeleste(btnVersus,   "VS");
         btnCeleste(btnLogout,   "Salir");
     }
 
@@ -170,6 +172,7 @@ public class MainMenuScreen implements Screen {
         if      (btnStats.contains(x, y))    game.setScreen(new StatsScreen(game));
         else if (btnSettings.contains(x, y)) game.setScreen(new SettingsScreen(game));
         else if (btnRanking.contains(x, y))  game.setScreen(new RankingScreen(game));
+        else if (btnVersus.contains(x, y))   game.setScreen(new VersusScreen(game));
         else if (btnLogout.contains(x, y))   { um.logout(); game.setScreen(new LoginScreen(game)); }
     }
 
