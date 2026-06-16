@@ -24,10 +24,9 @@ public class MainMenuScreen implements Screen {
     private final Rectangle btnLogout   = new Rectangle(634, 15, 148, 45);
 
     // Colores
-    private static final Color NEGRO        = new Color(0.04f, 0.04f, 0.04f, 0.90f);
-    private static final Color DORADO       = new Color(1.00f, 0.84f, 0.00f, 1.00f);
-    private static final Color DORADO_CLARO = new Color(1.00f, 0.95f, 0.40f, 1.00f);
-    private static final Color BLOQUEADO    = new Color(0.20f, 0.20f, 0.22f, 0.90f);
+    private static final Color BLANCO_NIVEL = new Color(0.98f, 0.98f, 0.98f, 1.00f);
+    private static final Color BORDE_NIVEL  = new Color(0.36f, 0.27f, 0.49f, 1.00f);
+    private static final Color BLOQUEADO    = new Color(0.78f, 0.78f, 0.82f, 1.00f);
     private static final Color CELESTE      = new Color(0.12f, 0.56f, 1.00f, 0.92f);
     private static final Color CELESTE_OSC  = new Color(0.05f, 0.25f, 0.60f, 1.00f);
 
@@ -38,14 +37,14 @@ public class MainMenuScreen implements Screen {
         this.game = game;
         this.um   = UserManager.getInstance();
 
-        // Fila 1 — 3 círculos dentro del panel morado (y_gdx≈430)
-        levelBtns[0] = new Rectangle(300, 390, 88, 88);
-        levelBtns[1] = new Rectangle(416, 390, 88, 88);
-        levelBtns[2] = new Rectangle(532, 390, 88, 88);
+        // Fila 1 — 3 círculos centrados dentro del panel morado
+        levelBtns[0] = new Rectangle(264, 356, 72, 72);
+        levelBtns[1] = new Rectangle(364, 356, 72, 72);
+        levelBtns[2] = new Rectangle(464, 356, 72, 72);
 
-        // Fila 2 — 2 círculos centrados dentro del panel morado (y_gdx≈280)
-        levelBtns[3] = new Rectangle(358, 255, 88, 88);
-        levelBtns[4] = new Rectangle(474, 255, 88, 88);
+        // Fila 2 — 2 círculos centrados y más abajo, sin tocar la fila superior
+        levelBtns[3] = new Rectangle(314, 236, 72, 72);
+        levelBtns[4] = new Rectangle(414, 236, 72, 72);
     }
 
     @Override public void show() {
@@ -90,36 +89,35 @@ public class MainMenuScreen implements Screen {
             Rectangle r   = levelBtns[i];
             float cx      = r.x + r.width  / 2f;
             float cy      = r.y + r.height / 2f;
-            float radio   = 44f;
+            float radio   = 36f;
             boolean desbloqueado = ud == null
                 || (ud.getLevelUnlocked() != null && ud.getLevelUnlocked()[i]);
 
-            // Sombra
+            // Sombra suave para que el botón resalte sobre el panel morado
             sr.begin(ShapeRenderer.ShapeType.Filled);
-            sr.setColor(new Color(0f, 0f, 0f, 0.40f));
-            sr.circle(cx + 4, cy - 4, radio);
+            sr.setColor(new Color(0f, 0f, 0f, 0.28f));
+            sr.circle(cx + 3, cy - 3, radio + 2);
             sr.end();
 
-            // Relleno: negro si desbloqueado, gris oscuro si bloqueado
+            // Relleno blanco como en la referencia
             sr.begin(ShapeRenderer.ShapeType.Filled);
-            sr.setColor(desbloqueado ? NEGRO : BLOQUEADO);
+            sr.setColor(desbloqueado ? BLANCO_NIVEL : BLOQUEADO);
             sr.circle(cx, cy, radio);
             sr.end();
 
-            // Outline dorado (doble pasada para grosor)
+            // Doble borde delgado
             sr.begin(ShapeRenderer.ShapeType.Line);
-            sr.setColor(DORADO);
-            sr.circle(cx, cy, radio + 3);
-            sr.circle(cx, cy, radio + 4);
-            sr.circle(cx, cy, radio + 5);
+            sr.setColor(BORDE_NIVEL);
+            sr.circle(cx, cy, radio);
+            sr.circle(cx, cy, radio - 5);
             sr.end();
 
-            // Número / X
+            // Número centrado
             game.batch.begin();
-            game.fontLarge.getData().setScale(1.4f);
-            game.fontLarge.setColor(desbloqueado ? DORADO_CLARO : Color.GRAY);
+            game.fontLarge.getData().setScale(2.15f);
+            game.fontLarge.setColor(desbloqueado ? Color.BLACK : Color.DARK_GRAY);
             String lbl = desbloqueado ? String.valueOf(i + 1) : "X";
-            game.fontLarge.draw(game.batch, lbl, r.x + (lbl.length() == 1 ? 32 : 24), r.y + 58);
+            game.fontLarge.draw(game.batch, lbl, cx - 12, cy + 24);
             game.batch.end();
         }
     }
