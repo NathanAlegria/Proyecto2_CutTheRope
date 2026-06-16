@@ -28,6 +28,9 @@ public class UserManager {
     private static UserManager instance;
 
     private static final String BASE_DIR = "usuario/";
+    private static final String VS_DIR = BASE_DIR + "vs/";
+    private String sessionToken;
+    private static final long ONLINE_LOCK_TIMEOUT_MS = 45L * 1000L;
 
     private UserData currentUser;               // usuario en sesión
     private Map<String, Integer> rankingCache;  // username → score
@@ -36,6 +39,12 @@ public class UserManager {
     private UserManager() {
         rankingCache = new LinkedHashMap<>();
         new File(BASE_DIR).mkdirs();
+        new File(VS_DIR).mkdirs();
+
+        // Si el usuario cierra la ventana con la X, intentamos liberar la sesión.
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try { logout(); } catch (Exception ignored) {}
+        }));
     }
 
     public static UserManager getInstance() {
@@ -111,6 +120,10 @@ public class UserManager {
         if (!ud.getPasswordHash().equals(hashPassword(password)))
             return "Contraseña incorrecta.";
 
+        if (isUserOnline(ud.getUsername()))
+            return "Jugador en línea. Este usuario ya tiene una sesión abierta.";
+
+        sessionToken = createOnlineLock(ud.getUsername());
         ud.setLastLoginDate(new Date());
         saveUser(ud);
         currentUser = ud;
@@ -120,8 +133,65 @@ public class UserManager {
     public void logout() {
         if (currentUser != null) {
             saveUser(currentUser);
+            removeOnlineLock(currentUser.getUsername());
             currentUser = null;
+            sessionToken = null;
         }
+    }
+
+
+    // ── Bloqueo de usuario en línea ─────────────────────────────────────────
+
+    private File onlineFile(String username) {
+        return new File(BASE_DIR + clean(username), "online.lock");
+    }
+
+    public boolean isUserOnline(String username) {
+        File f = onlineFile(username);
+        if (!f.exists()) return false;
+
+        // Soluciona el problema cuando se cierra la ventana sin hacer logout:
+        // si el archivo online.lock quedó viejo, se considera sesión fantasma.
+        long age = System.currentTimeMillis() - f.lastModified();
+        if (age > ONLINE_LOCK_TIMEOUT_MS) {
+            f.delete();
+            return false;
+        }
+        return true;
+    }
+
+    /** Mantiene viva la sesión activa actualizando la fecha del online.lock. */
+    public void heartbeatOnlineSession() {
+        if (currentUser == null || sessionToken == null) return;
+        File f = onlineFile(currentUser.getUsername());
+        if (!f.exists()) return;
+        f.setLastModified(System.currentTimeMillis());
+    }
+
+    private String createOnlineLock(String username) {
+        String token = UUID.randomUUID().toString();
+        File f = onlineFile(username);
+        f.getParentFile().mkdirs();
+        try (FileWriter fw = new FileWriter(f, false)) {
+            fw.write(token + "\n" + System.currentTimeMillis());
+        } catch (IOException e) {
+            System.err.println("No se pudo crear online.lock: " + e.getMessage());
+        }
+        return token;
+    }
+
+    private void removeOnlineLock(String username) {
+        File f = onlineFile(username);
+        if (!f.exists()) return;
+
+        // Evita borrar la sesión de otra ventana si el lock fue creado después.
+        if (sessionToken != null) {
+            try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+                String tokenFile = br.readLine();
+                if (tokenFile != null && !tokenFile.equals(sessionToken)) return;
+            } catch (IOException ignored) {}
+        }
+        f.delete();
     }
 
     // ── Persistencia ──────────────────────────────────────────────────────────
@@ -298,6 +368,97 @@ public class UserManager {
 
     private String clean(String value) {
         return value == null ? "" : value.trim().toLowerCase();
+    }
+
+
+    // ── Sistema VS por archivos binarios ────────────────────────────────────
+
+    private File versusFile(String id) { return new File(VS_DIR, id + ".dat"); }
+
+    public String createVersusRequest(String opponent) {
+        if (currentUser == null) return "No hay jugador activo.";
+        String me = clean(currentUser.getUsername());
+        String other = clean(opponent);
+        if (me.equals(other)) return "No puedes jugar VS contra ti mismo.";
+        if (getFriendshipStatus(me, other) != FriendshipStatus.FRIEND) return "Solo puedes retar a tus amigos.";
+        String id = me + "_vs_" + other + "_" + System.currentTimeMillis();
+        VersusMatch m = new VersusMatch(id, me, other);
+        saveVersusMatch(m);
+        return "Solicitud de partida VS enviada a " + other + ".";
+    }
+
+    public String acceptVersusRequest(String matchId) {
+        if (currentUser == null) return "No hay jugador activo.";
+        VersusMatch m = loadVersusMatch(matchId);
+        if (m == null) return "La solicitud VS no existe.";
+        if (!m.opponent.equalsIgnoreCase(currentUser.getUsername())) return "Solo el amigo retado puede aceptar.";
+        m.state = VersusMatch.State.ACCEPTED;
+        m.updatedAt = new Date();
+        saveVersusMatch(m);
+        return "Partida VS aceptada. Ahora ambos deben presionar Listo.";
+    }
+
+    public String setVersusReady(String matchId) {
+        if (currentUser == null) return "No hay jugador activo.";
+        VersusMatch m = loadVersusMatch(matchId);
+        if (m == null) return "La partida VS no existe.";
+        if (!m.includes(currentUser.getUsername())) return "No perteneces a esta partida VS.";
+        if (m.state == VersusMatch.State.REQUESTED) return "Primero el amigo debe aceptar la solicitud VS.";
+        m.setReady(currentUser.getUsername());
+        saveVersusMatch(m);
+        return m.hasBothReady() ? "Ambos listos. Inicia desde nivel 1." : "Listo marcado. Esperando al otro jugador.";
+    }
+
+    public void recordVersusLevel(String matchId, String username, int level, int stars, long timeMs) {
+        VersusMatch m = loadVersusMatch(matchId);
+        if (m == null) return;
+        m.recordLevel(clean(username), level, stars, timeMs);
+        saveVersusMatch(m);
+        if (m.state == VersusMatch.State.FINISHED) updateVersusStats(m);
+    }
+
+    private void updateVersusStats(VersusMatch m) {
+        UserData a = loadUser(m.requester);
+        UserData b = loadUser(m.opponent);
+        int winnerStars = "Empate".equalsIgnoreCase(m.winner) ? Math.max(m.totalStars(m.requester), m.totalStars(m.opponent)) : m.totalStars(m.winner);
+        long winnerTime = "Empate".equalsIgnoreCase(m.winner) ? Math.min(m.totalTime(m.requester), m.totalTime(m.opponent)) : m.totalTime(m.winner);
+        if (a != null) { a.recordVersus(m.opponent, m.winner, m.totalStars(m.requester), m.totalTime(m.requester), m.reason, winnerStars, winnerTime, 15); saveUser(a); }
+        if (b != null) { b.recordVersus(m.requester, m.winner, m.totalStars(m.opponent), m.totalTime(m.opponent), m.reason, winnerStars, winnerTime, 15); saveUser(b); }
+        if (currentUser != null) { if (currentUser.getUsername().equals(m.requester)) currentUser = a; if (currentUser.getUsername().equals(m.opponent)) currentUser = b; }
+    }
+
+    public void saveVersusMatch(VersusMatch m) {
+        new File(VS_DIR).mkdirs();
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(versusFile(m.id)))) {
+            oos.writeObject(m);
+        } catch (IOException e) {
+            System.err.println("Error guardando VS: " + e.getMessage());
+        }
+    }
+
+    public VersusMatch loadVersusMatch(String id) {
+        if (id == null) return null;
+        File f = versusFile(id);
+        if (!f.exists()) return null;
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f))) {
+            return (VersusMatch) ois.readObject();
+        } catch (Exception e) {
+            System.err.println("Error cargando VS: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public List<VersusMatch> getVersusMatchesFor(String username) {
+        List<VersusMatch> out = new ArrayList<>();
+        File[] files = new File(VS_DIR).listFiles((dir, name) -> name.endsWith(".dat"));
+        if (files == null) return out;
+        for (File f : files) {
+            String id = f.getName().substring(0, f.getName().length() - 4);
+            VersusMatch m = loadVersusMatch(id);
+            if (m != null && m.includes(clean(username))) out.add(m);
+        }
+        out.sort((a,b) -> b.updatedAt.compareTo(a.updatedAt));
+        return out;
     }
 
     // ── Hash ─────────────────────────────────────────────────────────────────

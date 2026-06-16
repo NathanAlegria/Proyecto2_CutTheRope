@@ -13,7 +13,7 @@ import com.badlogic.gdx.math.Vector2;
 public class Rope {
 
     private static final int SEGMENTS = 14;
-    private static final int CONSTRAINT_ITERATIONS = 3;
+    private static final int CONSTRAINT_ITERATIONS = 8;
 
     private final Vector2[] nodes;
     private final Candy candy;
@@ -80,15 +80,16 @@ public class Rope {
             candy.velocity.y -= radial.y * tension * dt;
         }
 
-        // Límite de seguridad: evita que la cuerda se estire demasiado si hay lag,
-        // pero conserva la velocidad tangencial para que el caramelo siga oscilando.
-        float maxLen = ropeLength * 1.10f;
-        if (dist > maxLen) {
-            candy.position.set(anchorX + radial.x * maxLen, anchorY + radial.y * maxLen);
+        // Restricción rígida: la cuerda NO se alarga. Si el dulce intenta pasar
+        // la longitud original, lo proyecta exactamente al radio de la cuerda.
+        // Se elimina solo la velocidad radial hacia afuera y se conserva la
+        // velocidad tangencial para que siga balanceándose con tensión real.
+        if (dist > ropeLength) {
+            candy.position.set(anchorX + radial.x * ropeLength, anchorY + radial.y * ropeLength);
             float radialVelocity = candy.velocity.dot(radial);
             if (radialVelocity > 0f) {
-                candy.velocity.x -= radial.x * radialVelocity * 0.85f;
-                candy.velocity.y -= radial.y * radialVelocity * 0.85f;
+                candy.velocity.x -= radial.x * radialVelocity;
+                candy.velocity.y -= radial.y * radialVelocity;
             }
         }
     }

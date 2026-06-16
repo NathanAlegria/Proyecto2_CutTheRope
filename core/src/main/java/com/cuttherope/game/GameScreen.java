@@ -85,6 +85,10 @@ public class GameScreen extends Juego implements Screen {
         this.currentLevel = levelIndex;
     }
 
+    private boolean isVersusMode() {
+        return VersusModeContext.isActive();
+    }
+
     // ── Juego abstracto: implementaciones ────────────────────────────────────
 
     @Override
@@ -378,7 +382,7 @@ public class GameScreen extends Juego implements Screen {
         game.font.setColor(Color.WHITE);
         game.font.draw(
             game.batch,
-            MainGame.t("Nivel") + " " + (currentLevel + 1) + " – " + MainGame.t(currentLevelData.title),
+            (isVersusMode() ? "VS - " : "") + MainGame.t("Nivel") + " " + (currentLevel + 1) + " – " + MainGame.t(currentLevelData.title),
             10,
             690
         );
@@ -485,7 +489,11 @@ public class GameScreen extends Juego implements Screen {
             game.batch.begin();
 
             game.fontLarge.setColor(new Color(0.9f, 0.6f, 1f, 1f));
-            game.fontLarge.draw(game.batch, MainGame.t("¡¡JUEGO COMPLETADO!!"), 110, 460);
+            game.fontLarge.draw(game.batch, isVersusMode() ? "VS COMPLETADO" : MainGame.t("¡¡JUEGO COMPLETADO!!"), 160, 460);
+            if (isVersusMode()) {
+                game.font.setColor(Color.WHITE);
+                game.font.draw(game.batch, "El resultado final aparece en Estadísticas cuando ambos terminen.", 125, 305);
+            }
 
             game.batch.end();
         }
@@ -681,6 +689,7 @@ public class GameScreen extends Juego implements Screen {
     }
 
     private void goToMenu() {
+        if (isVersusMode()) VersusModeContext.clear();
         game.audioManager.playMenuMusic();
         game.setScreen(new MainMenuScreen(game));
         dispose();
@@ -781,6 +790,9 @@ public class GameScreen extends Juego implements Screen {
         int earnedStars = won ? computeStars() : 0;
 
         StatsSaveThread.getInstance().enqueueRecord(ud, currentLevel, earnedStars, elapsed, won);
+        if (isVersusMode()) {
+            um.recordVersusLevel(VersusModeContext.getMatchId(), ud.getUsername(), currentLevel, earnedStars, elapsed);
+        }
     }
 
     // ── Screen lifecycle ──────────────────────────────────────────────────────

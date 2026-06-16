@@ -26,6 +26,7 @@ public class SettingsScreen implements Screen {
     private final MainGame    game;
     private final UserManager um;
     private ShapeRenderer     sr;
+    private Texture fondoAjustes;
 
     private final Rectangle btnBack      = new Rectangle(18, 18, 140, 40);
 
@@ -74,6 +75,7 @@ public class SettingsScreen implements Screen {
     @Override
     public void show() {
         sr = new ShapeRenderer();
+        fondoAjustes = AssetPaths.textureAnyOrNull(AssetPaths.FONDO_AJUSTES, "Imagenes/FondoA.png", "assets/Imagenes/FondoA.png", "FondoA", "FondoA.jpg", "fondoA.png", "fondoa.png");
     }
 
     @Override
@@ -98,32 +100,35 @@ public class SettingsScreen implements Screen {
     }
 
     private void drawBg() {
+        if (fondoAjustes != null) {
+            game.batch.begin();
+            game.batch.draw(fondoAjustes, 0, 0, 800, 700);
+            game.batch.end();
+        } else {
+            sr.begin(ShapeRenderer.ShapeType.Filled);
+            sr.setColor(new Color(0.035f, 0.020f, 0.095f, 1f));
+            sr.rect(0, 0, 800, 700);
+            sr.end();
+        }
+
+        // Capa ligera para conservar el estilo pixel-art morado y mejorar lectura.
         sr.begin(ShapeRenderer.ShapeType.Filled);
-
-        sr.setColor(new Color(0.07f, 0.05f, 0.12f, 1f));
+        sr.setColor(new Color(0.02f, 0.01f, 0.06f, 0.18f));
         sr.rect(0, 0, 800, 700);
-
-        sr.setColor(new Color(0.12f, 0.08f, 0.23f, 1f));
-        sr.rect(10, 10, 780, 680);
-
-        sr.setColor(new Color(0.18f, 0.10f, 0.32f, 0.65f));
-        sr.circle(700, 620, 90);
-
-        sr.setColor(new Color(0.2f, 0.75f, 0.2f, 0.13f));
-        sr.circle(95, 100, 70);
-
         sr.end();
 
         sr.begin(ShapeRenderer.ShapeType.Line);
-        sr.setColor(new Color(0.55f, 0.35f, 0.9f, 1f));
+        sr.setColor(new Color(0.62f, 0.34f, 1f, 1f));
         sr.rect(10, 10, 780, 680);
+        sr.setColor(new Color(0.36f, 0.18f, 0.70f, 0.85f));
+        sr.rect(18, 18, 764, 664);
         sr.end();
     }
 
     private void drawTitle() {
         game.batch.begin();
         game.fontLarge.setColor(new Color(0.9f, 0.7f, 1f, 1f));
-        game.fontLarge.draw(game.batch, MainGame.t("Ajustes"), 310, 665);
+        game.fontLarge.draw(game.batch, MainGame.t("AJUSTES"), 310, 665);
         game.batch.end();
     }
 
@@ -311,7 +316,11 @@ public class SettingsScreen implements Screen {
         boolean hov = isHovered(r);
 
         sr.begin(ShapeRenderer.ShapeType.Filled);
-        sr.setColor(hov ? new Color(0.5f, 0.4f, 0.7f, 1f) : new Color(0.35f, 0.28f, 0.55f, 1f));
+        sr.setColor(new Color(0.03f, 0.02f, 0.08f, 0.78f));
+        sr.rect(r.x, r.y, r.width, r.height);
+        sr.end();
+        sr.begin(ShapeRenderer.ShapeType.Line);
+        sr.setColor(hov ? new Color(0.85f, 0.55f, 1f, 1f) : new Color(0.60f, 0.35f, 0.95f, 1f));
         sr.rect(r.x, r.y, r.width, r.height);
         sr.end();
 
@@ -479,6 +488,10 @@ public class SettingsScreen implements Screen {
     public void dispose() {
         if (sr != null) {
             sr.dispose();
+        }
+        if (fondoAjustes != null) {
+            fondoAjustes.dispose();
+            fondoAjustes = null;
         }
         // No se eliminan las texturas aquí para no recargarlas cada vez que se abre Ajustes.
         // Se liberan al cerrar la aplicación junto con el resto de recursos.

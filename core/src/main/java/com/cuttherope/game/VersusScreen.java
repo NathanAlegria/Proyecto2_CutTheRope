@@ -3,6 +3,7 @@ package com.cuttherope.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
@@ -11,260 +12,274 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class VersusScreen extends SocialScreenBase {
-    private final Rectangle btnBack = new Rectangle(20, 18, 130, 42);
-    private final Rectangle tabPlayers = new Rectangle(180, 610, 190, 42);
-    private final Rectangle tabVersus = new Rectangle(390, 610, 190, 42);
-    private final Rectangle[] levelBtns = new Rectangle[5];
+    private final Rectangle btnBack = new Rectangle(18, 18, 120, 42);
+    private final Rectangle tabSolicitudes = new Rectangle(260, 590, 145, 46);
+    private final Rectangle tabVsAmigos = new Rectangle(420, 590, 145, 46);
     private final List<Rectangle> rowButtons = new ArrayList<>();
+    private final List<Rectangle> secondButtons = new ArrayList<>();
 
     private List<UserData> allUsers = new ArrayList<>();
     private List<UserData> friends = new ArrayList<>();
-    private boolean showVs = false;
+    private List<VersusMatch> matches = new ArrayList<>();
+    private int tab = 0;
     private String message = "";
-    private String selectedFriend = null;
-    private VersusResult lastResult = null;
+    private Texture fondoVs;
 
-    public VersusScreen(MainGame game) {
-        super(game);
-        for (int i = 0; i < levelBtns.length; i++) {
-            levelBtns[i] = new Rectangle(205 + i * 78, 140, 62, 45);
-        }
-    }
+    public VersusScreen(MainGame game) { super(game); }
 
-    @Override
-    public void show() {
+    @Override public void show() {
         sr = new ShapeRenderer();
         if (game.audioManager != null) game.audioManager.playMenuMusic();
+        fondoVs = AssetPaths.textureAnyOrNull(AssetPaths.FONDO_VS, "Imagenes/FondoVS.png", "assets/Imagenes/FondoVS.png", "FondoVS", "FondoVS.jpg", "fondovs.png");
         reloadLists();
     }
 
     private void reloadLists() {
-        allUsers = um.getAllUsers();
         UserData current = um.getCurrentUser();
+        allUsers = um.getAllUsers();
         friends = current == null ? new ArrayList<>() : um.getFriendsFor(current.getUsername());
+        matches = current == null ? new ArrayList<>() : um.getVersusMatchesFor(current.getUsername());
     }
 
-    @Override
-    public void render(float delta) {
+    @Override public void render(float delta) {
         game.viewport.apply();
         game.batch.setProjectionMatrix(game.camera.combined);
         sr.setProjectionMatrix(game.camera.combined);
-
-        Gdx.gl.glClearColor(0.06f, 0.05f, 0.10f, 1f);
+        Gdx.gl.glClearColor(0.10f, 0.045f, 0.015f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        drawBackground();
+        drawVsBackground();
         drawHeader();
-        drawButton(btnBack, "← Menú", new Color(0.45f, 0.32f, 0.70f, 1f));
-        drawButton(tabPlayers, "Solicitudes", showVs ? new Color(0.18f, 0.38f, 0.82f, 1f) : new Color(0.12f, 0.56f, 1f, 1f));
-        drawButton(tabVersus, "VS Amigos", showVs ? new Color(0.12f, 0.56f, 1f, 1f) : new Color(0.18f, 0.38f, 0.82f, 1f));
+        drawTab(tabSolicitudes, "Solicitudes", tab == 0);
+        drawTab(tabVsAmigos, "VS Amigos", tab == 1);
 
-        if (showVs) drawVersusPanel(); else drawRequestPanel();
+        if (tab == 0) drawSolicitudesPanel();
+        else drawVsAmigosPanel();
+
+        drawButton(btnBack, "☰ Menú", new Color(0.22f, 0.12f, 0.10f, 1f), 0);
         handleInput();
     }
 
-    private void drawBackground() {
-        sr.begin(ShapeRenderer.ShapeType.Filled);
-        sr.setColor(new Color(0.08f, 0.06f, 0.14f, 1f));
-        sr.rect(0, 0, 800, 700);
-        sr.setColor(new Color(0.17f, 0.12f, 0.27f, 1f));
-        sr.rect(35, 85, 730, 500);
-        sr.setColor(new Color(1f, 0.84f, 0f, 0.12f));
-        sr.circle(705, 625, 76);
-        sr.setColor(new Color(0.12f, 0.56f, 1f, 0.12f));
-        sr.circle(90, 105, 68);
-        sr.end();
+    private void drawVsBackground() {
+        if (fondoVs != null) {
+            game.batch.begin();
+            game.batch.draw(fondoVs, 0, 0, 800, 700);
+            game.batch.end();
+        } else {
+            sr.begin(ShapeRenderer.ShapeType.Filled);
+            sr.setColor(new Color(0.09f, 0.045f, 0.015f, 1f));
+            sr.rect(0, 0, 800, 700);
+            sr.end();
+        }
 
-        sr.begin(ShapeRenderer.ShapeType.Line);
-        sr.setColor(new Color(1f, 0.84f, 0f, 0.85f));
-        sr.rect(35, 85, 730, 500);
+        // Capa oscura suave para que el texto y los paneles siempre se lean bien.
+        sr.begin(ShapeRenderer.ShapeType.Filled);
+        sr.setColor(new Color(0f, 0f, 0f, 0.22f));
+        sr.rect(0, 0, 800, 700);
         sr.end();
     }
 
     private void drawHeader() {
         game.batch.begin();
-        game.fontLarge.setColor(new Color(1f, 0.84f, 0.12f, 1f));
+        game.fontLarge.setColor(new Color(1f, 0.84f, 0.05f, 1f));
         game.fontLarge.draw(game.batch, "Sistema VS y Amistades", 210, 675);
-        game.font.setColor(Color.WHITE);
-        game.font.draw(game.batch, "Envía solicitudes, acepta amigos y compara niveles por estrellas y tiempo.", 120, 595);
-        game.fontSmall.setColor(new Color(1f, 0.95f, 0.4f, 1f));
-        game.fontSmall.draw(game.batch, message == null ? "" : message, 175, 50);
+        game.fontSmall.setColor(new Color(1f, 0.92f, 0.40f, 1f));
+        game.fontSmall.draw(game.batch, "Envía solicitudes, acepta amigos y reta en una partida normal del nivel 1 al 5.", 120, 645);
+        if (message != null && !message.isEmpty()) {
+            game.fontSmall.setColor(new Color(1f, 0.95f, 0.55f, 1f));
+            game.fontSmall.draw(game.batch, message, 35, 72);
+        }
         game.batch.end();
     }
 
-    private void drawRequestPanel() {
-        rowButtons.clear();
-        UserData current = um.getCurrentUser();
+    private void drawTab(Rectangle r, String text, boolean active) {
+        drawButton(r, text, active ? new Color(0.18f, 0.10f, 0.08f, 1f) : new Color(0.13f, 0.075f, 0.06f, 1f), active ? 1 : 0);
+    }
+
+    private void drawPanel(String title, String subtitle) {
+        sr.begin(ShapeRenderer.ShapeType.Filled);
+        sr.setColor(new Color(0f, 0f, 0f, 0.35f)); sr.rect(16, 120, 768, 440);
+        sr.setColor(new Color(0.09f, 0.045f, 0.015f, 0.92f)); sr.rect(20, 124, 760, 432);
+        sr.end();
+        sr.begin(ShapeRenderer.ShapeType.Line);
+        sr.setColor(new Color(0.90f, 0.58f, 0.08f, 1f)); sr.rect(20, 124, 760, 432);
+        sr.end();
 
         game.batch.begin();
-        game.font.setColor(new Color(1f, 0.84f, 0.12f, 1f));
-        game.font.draw(game.batch, "Jugadores existentes", 70, 555);
-        game.fontSmall.setColor(Color.LIGHT_GRAY);
-        game.fontSmall.draw(game.batch, "Nombre", 75, 525);
-        game.fontSmall.draw(game.batch, "Estado", 345, 525);
+        game.font.setColor(new Color(1f, 0.86f, 0.05f, 1f)); game.font.draw(game.batch, title, 40, 530);
+        game.fontSmall.setColor(new Color(0.84f, 0.68f, 0.32f, 1f)); game.fontSmall.draw(game.batch, subtitle, 40, 508);
         game.batch.end();
+    }
 
+    private void drawSolicitudesPanel() {
+        rowButtons.clear(); secondButtons.clear();
+        drawPanel("Jugadores existentes", "USUARIO                         NOMBRE                                      ESTADO");
+        UserData current = um.getCurrentUser();
         if (current == null) return;
         int row = 0;
         for (UserData user : allUsers) {
-            if (user.getUsername().equals(current.getUsername())) continue;
-            if (row >= 8) break;
-            float y = 490 - row * 48;
-            drawRowBackground(y, row);
+            if (user.getUsername().equals(current.getUsername()) || row >= 7) continue;
+            float y = 468 - row * 54;
             FriendshipStatus status = um.getFriendshipStatus(current.getUsername(), user.getUsername());
-            Rectangle actionBtn = new Rectangle(510, y - 26, 190, 34);
-            rowButtons.add(actionBtn);
-
-            game.batch.begin();
-            game.fontSmall.setColor(Color.WHITE);
-            game.fontSmall.draw(game.batch, user.getUsername(), 75, y - 5);
-            game.fontSmall.setColor(new Color(0.82f, 0.78f, 1f, 1f));
-            game.fontSmall.draw(game.batch, trim(user.getFullName(), 24), 190, y - 5);
-            game.fontSmall.setColor(status == FriendshipStatus.FRIEND ? new Color(0.55f, 1f, 0.55f, 1f) : new Color(1f, 0.92f, 0.45f, 1f));
-            game.fontSmall.draw(game.batch, status.name(), 345, y - 5);
-            game.batch.end();
-
-            Color c = (status.canSendRequest() || status.canAcceptRequest())
-                ? new Color(0.12f, 0.56f, 1f, 1f)
-                : new Color(0.20f, 0.22f, 0.28f, 1f);
-            drawButton(actionBtn, status.getButtonText(), c);
+            Rectangle actionBtn = new Rectangle(590, y - 30, 150, 36);
+            rowButtons.add(actionBtn); secondButtons.add(new Rectangle(0,0,0,0));
+            drawPlayerRow(y, row, user.getUsername(), trim(user.getFullName(), 28), status.name(), status == FriendshipStatus.FRIEND);
+            drawButton(actionBtn, status.getButtonText(), (status.canSendRequest() || status.canAcceptRequest()) ? new Color(0.22f, 0.12f, 0.08f, 1f) : new Color(0.13f, 0.09f, 0.07f, 1f), status == FriendshipStatus.FRIEND ? 2 : 0);
             row++;
         }
+        if (row == 0) drawEmpty("No hay jugadores para mostrar.");
     }
 
-    private void drawVersusPanel() {
-        rowButtons.clear();
+    private void drawVsAmigosPanel() {
+        rowButtons.clear(); secondButtons.clear();
+        drawPanel("VS Amigos", "Amigos aceptados arriba. Solicitudes y partidas listas abajo.");
         UserData current = um.getCurrentUser();
+        if (current == null) return;
+        int row = 0;
+        for (UserData user : friends) {
+            if (row >= 3) break;
+            float y = 468 - row * 54;
+            Rectangle reto = new Rectangle(590, y - 30, 150, 36);
+            rowButtons.add(reto); secondButtons.add(new Rectangle(0,0,0,0));
+            drawPlayerRow(y, row, user.getUsername(), trim(user.getFullName(), 28), "AMIGO", true);
+            drawButton(reto, "Retar VS", new Color(0.22f, 0.12f, 0.08f, 1f), 2);
+            row++;
+        }
 
         game.batch.begin();
-        game.font.setColor(new Color(1f, 0.84f, 0.12f, 1f));
-        game.font.draw(game.batch, "Selecciona un amigo", 70, 555);
-        game.fontSmall.setColor(Color.LIGHT_GRAY);
-        game.fontSmall.draw(game.batch, "Luego elige nivel 1-5. Gana quien tenga más estrellas; si empatan, gana el menor tiempo.", 70, 525);
+        game.font.setColor(new Color(1f, 0.86f, 0.05f, 1f)); game.font.draw(game.batch, "Partidas VS", 40, 315);
+        game.fontSmall.setColor(new Color(0.84f, 0.68f, 0.32f, 1f)); game.fontSmall.draw(game.batch, "Aceptar / Listo / Jugar cuando ambos estén listos", 40, 296);
         game.batch.end();
 
-        int row = 0;
-        for (UserData friend : friends) {
-            if (row >= 6) break;
-            float y = 485 - row * 48;
-            drawRowBackground(y, row);
-            Rectangle selectBtn = new Rectangle(520, y - 26, 140, 34);
-            rowButtons.add(selectBtn);
-
-            boolean selected = friend.getUsername().equals(selectedFriend);
-            game.batch.begin();
-            game.fontSmall.setColor(selected ? new Color(1f, 0.84f, 0.12f, 1f) : Color.WHITE);
-            game.fontSmall.draw(game.batch, friend.getUsername(), 75, y - 5);
-            game.fontSmall.setColor(new Color(0.82f, 0.78f, 1f, 1f));
-            game.fontSmall.draw(game.batch, trim(friend.getFullName(), 28), 220, y - 5);
-            game.batch.end();
-            drawButton(selectBtn, selected ? "Seleccionado" : "Elegir", new Color(0.12f, 0.56f, 1f, 1f));
-            row++;
+        int matchRow = 0;
+        for (VersusMatch m : matches) {
+            if (m.state == VersusMatch.State.FINISHED || matchRow >= 4) continue;
+            float y = 260 - matchRow * 50;
+            Rectangle a = new Rectangle(500, y - 28, 112, 34);
+            Rectangle b = new Rectangle(625, y - 28, 95, 34);
+            rowButtons.add(a); secondButtons.add(b);
+            String other = m.otherPlayer(current.getUsername());
+            String status = m.state.name() + " | Tú: " + (m.isReady(current.getUsername()) ? "Listo" : "No listo");
+            drawMatchRow(y, matchRow, "VS " + other, status);
+            String txtA;
+            if (m.state == VersusMatch.State.REQUESTED && m.opponent.equalsIgnoreCase(current.getUsername())) txtA = "Aceptar";
+            else if (m.state == VersusMatch.State.REQUESTED) txtA = "Enviada";
+            else txtA = m.isReady(current.getUsername()) ? "Listo OK" : "Listo";
+            drawButton(a, txtA, new Color(0.22f, 0.12f, 0.08f, 1f), 0);
+            drawButton(b, m.hasBothReady() ? "Jugar" : "Espera", m.hasBothReady() ? new Color(0.12f, 0.35f, 0.12f, 1f) : new Color(0.13f, 0.09f, 0.07f, 1f), m.hasBothReady() ? 2 : 0);
+            matchRow++;
         }
-
-        if (friends.isEmpty()) {
-            game.batch.begin();
-            game.font.setColor(Color.WHITE);
-            game.font.draw(game.batch, "Aún no tienes amigos aceptados. Primero envía o acepta solicitudes.", 95, 420);
-            game.batch.end();
-        }
-
-        for (int i = 0; i < levelBtns.length; i++) {
-            drawButton(levelBtns[i], "Nivel " + (i + 1), new Color(0.20f, 0.60f, 0.25f, 1f));
-        }
-
-        if (lastResult != null) {
-            game.batch.begin();
-            game.font.setColor(new Color(1f, 0.84f, 0.12f, 1f));
-            game.font.draw(game.batch, "Resultado nivel " + (lastResult.level + 1) + ": " + lastResult.winner, 185, 110);
-            game.fontSmall.setColor(Color.WHITE);
-            game.fontSmall.draw(game.batch, lastResult.playerA + ": " + lastResult.starsA + "★ / " + formatTime(lastResult.timeA)
-                + "    " + lastResult.playerB + ": " + lastResult.starsB + "★ / " + formatTime(lastResult.timeB), 170, 82);
-            game.fontSmall.draw(game.batch, lastResult.reason, 280, 62);
-            game.batch.end();
-        }
+        if (friends.isEmpty() && matches.isEmpty()) drawEmpty("Primero acepta o envía una solicitud de amistad.");
     }
 
-    private void drawRowBackground(float y, int row) {
+    private void drawPlayerRow(float y, int row, String username, String name, String status, boolean friend) {
         sr.begin(ShapeRenderer.ShapeType.Filled);
-        sr.setColor(row % 2 == 0 ? new Color(0.12f, 0.09f, 0.20f, 1f) : new Color(0.10f, 0.08f, 0.17f, 1f));
-        sr.rect(65, y - 32, 660, 40);
+        sr.setColor(row % 2 == 0 ? new Color(0.20f, 0.12f, 0.07f, 0.96f) : new Color(0.14f, 0.08f, 0.045f, 0.96f));
+        sr.rect(40, y - 38, 710, 46);
+        sr.end();
+        sr.begin(ShapeRenderer.ShapeType.Line); sr.setColor(new Color(0.45f, 0.25f, 0.08f, 1f)); sr.rect(40, y - 38, 710, 46); sr.end();
+        game.batch.begin();
+        game.fontSmall.setColor(Color.WHITE); game.fontSmall.draw(game.batch, username, 50, y - 10);
+        game.fontSmall.setColor(new Color(0.82f, 0.78f, 0.70f, 1f)); game.fontSmall.draw(game.batch, name, 190, y - 10);
+        game.fontSmall.setColor(friend ? new Color(0.35f, 1f, 0.45f, 1f) : new Color(1f, 0.85f, 0.10f, 1f)); game.fontSmall.draw(game.batch, status, 450, y - 10);
+        game.batch.end();
+    }
+
+    private void drawMatchRow(float y, int row, String title, String status) {
+        sr.begin(ShapeRenderer.ShapeType.Filled);
+        sr.setColor(row % 2 == 0 ? new Color(0.20f, 0.12f, 0.07f, 0.96f) : new Color(0.14f, 0.08f, 0.045f, 0.96f));
+        sr.rect(40, y - 36, 710, 42);
+        sr.end();
+        sr.begin(ShapeRenderer.ShapeType.Line); sr.setColor(new Color(0.45f, 0.25f, 0.08f, 1f)); sr.rect(40, y - 36, 710, 42); sr.end();
+        game.batch.begin();
+        game.fontSmall.setColor(Color.WHITE); game.fontSmall.draw(game.batch, title, 50, y - 10);
+        game.fontSmall.setColor(new Color(1f, 0.85f, 0.10f, 1f)); game.fontSmall.draw(game.batch, status, 190, y - 10);
+        game.batch.end();
+    }
+
+    private void drawEmpty(String txt) {
+        game.batch.begin(); game.font.setColor(Color.WHITE); game.font.draw(game.batch, txt, 65, 400); game.batch.end();
+    }
+
+    private void drawButton(Rectangle r, String text, Color base, int accentMode) {
+        boolean hov = isHovered(r);
+        Color border = accentMode == 2 ? new Color(0.10f, 0.82f, 0.32f, 1f) : new Color(0.18f, 0.40f, 0.95f, 1f);
+        if (accentMode == 1) border = new Color(0.85f, 0.55f, 0.10f, 1f);
+        sr.begin(ShapeRenderer.ShapeType.Filled);
+        sr.setColor(new Color(0f, 0f, 0f, 0.55f)); sr.rect(r.x + 3, r.y - 3, r.width, r.height);
+        sr.setColor(hov ? base.cpy().add(0.08f, 0.08f, 0.08f, 0f) : base); sr.rect(r.x, r.y, r.width, r.height);
         sr.end();
         sr.begin(ShapeRenderer.ShapeType.Line);
-        sr.setColor(new Color(0.38f, 0.28f, 0.55f, 1f));
-        sr.rect(65, y - 32, 660, 40);
+        sr.setColor(new Color(0.72f, 0.52f, 0.30f, 1f)); sr.rect(r.x, r.y, r.width, r.height);
+        sr.setColor(border); sr.line(r.x + 4, r.y + 2, r.x + r.width - 4, r.y + 2);
         sr.end();
+        game.batch.begin(); game.fontSmall.setColor(Color.WHITE); game.fontSmall.draw(game.batch, text, r.x + 12, r.y + 24); game.batch.end();
     }
 
     private void handleInput() {
         if (!Gdx.input.justTouched()) return;
-        Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-        game.viewport.unproject(touch);
+        Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0); game.viewport.unproject(touch);
         if (game.audioManager != null) game.audioManager.playClick();
-
-        if (btnBack.contains(touch.x, touch.y)) {
-            game.setScreen(new MainMenuScreen(game));
-            dispose();
-            return;
-        }
-        if (tabPlayers.contains(touch.x, touch.y)) { showVs = false; message = ""; reloadLists(); return; }
-        if (tabVersus.contains(touch.x, touch.y)) { showVs = true; message = ""; reloadLists(); return; }
-
-        if (showVs) handleVsInput(touch.x, touch.y); else handleRequestInput(touch.x, touch.y);
+        if (btnBack.contains(touch.x, touch.y)) { game.setScreen(new MainMenuScreen(game)); dispose(); return; }
+        if (tabSolicitudes.contains(touch.x, touch.y)) { tab = 0; message = ""; reloadLists(); return; }
+        if (tabVsAmigos.contains(touch.x, touch.y)) { tab = 1; message = ""; reloadLists(); return; }
+        if (tab == 0) handleSolicitudesInput(touch.x, touch.y); else handleVsAmigosInput(touch.x, touch.y);
     }
 
-    private void handleRequestInput(float x, float y) {
-        UserData current = um.getCurrentUser();
-        if (current == null) return;
-        int visibleIndex = 0;
+    private void handleSolicitudesInput(float x, float y) {
+        UserData current = um.getCurrentUser(); if (current == null) return;
+        int visible = 0;
         for (UserData user : allUsers) {
             if (user.getUsername().equals(current.getUsername())) continue;
-            if (visibleIndex >= rowButtons.size()) break;
-            if (rowButtons.get(visibleIndex).contains(x, y)) {
+            if (visible >= rowButtons.size()) break;
+            if (rowButtons.get(visible).contains(x, y)) {
                 FriendshipStatus status = um.getFriendshipStatus(current.getUsername(), user.getUsername());
                 SocialAction action = null;
                 if (status.canSendRequest()) action = new FriendRequestAction(um, current.getUsername(), user.getUsername());
                 else if (status.canAcceptRequest()) action = new AcceptFriendAction(um, current.getUsername(), user.getUsername());
-                if (action != null) message = action.execute(); else message = status.getButtonText();
-                reloadLists();
-                return;
+                message = action != null ? action.execute() : status.getButtonText(); reloadLists(); return;
             }
-            visibleIndex++;
+            visible++;
         }
     }
 
-    private void handleVsInput(float x, float y) {
-        for (int i = 0; i < friends.size() && i < rowButtons.size(); i++) {
-            if (rowButtons.get(i).contains(x, y)) {
-                selectedFriend = friends.get(i).getUsername();
-                lastResult = null;
-                message = "Amigo seleccionado: " + selectedFriend;
-                return;
+    private void handleVsAmigosInput(float x, float y) {
+        UserData current = um.getCurrentUser(); if (current == null) return;
+        int index = 0;
+        for (UserData user : friends) {
+            if (index >= rowButtons.size()) break;
+            if (rowButtons.get(index).contains(x, y)) {
+                message = um.createVersusRequest(user.getUsername()); reloadLists(); return;
             }
+            index++;
+            if (index >= 3) break;
         }
-        for (int i = 0; i < levelBtns.length; i++) {
-            if (levelBtns[i].contains(x, y)) {
-                UserData current = um.getCurrentUser();
-                if (selectedFriend == null) { message = "Selecciona un amigo primero."; return; }
-                lastResult = um.compareVersus(current.getUsername(), selectedFriend, i);
-                message = "VS calculado.";
-                return;
+        for (VersusMatch m : matches) {
+            if (m.state == VersusMatch.State.FINISHED) continue;
+            if (index >= rowButtons.size()) break;
+            if (rowButtons.get(index).contains(x, y)) {
+                if (m.state == VersusMatch.State.REQUESTED && m.opponent.equalsIgnoreCase(current.getUsername())) message = um.acceptVersusRequest(m.id);
+                else if (m.state == VersusMatch.State.REQUESTED) message = "Esperando que el amigo acepte la partida.";
+                else message = um.setVersusReady(m.id);
+                reloadLists(); return;
             }
+            if (secondButtons.get(index).contains(x, y)) {
+                VersusMatch fresh = um.loadVersusMatch(m.id);
+                if (fresh != null && fresh.hasBothReady()) {
+                    VersusModeContext.start(fresh.id);
+                    game.setScreen(new GameScreen(game, 0));
+                    dispose();
+                } else message = "Aún falta que ambos presionen Listo.";
+                reloadLists(); return;
+            }
+            index++;
         }
     }
 
-    private String trim(String s, int max) {
-        if (s == null) return "";
-        return s.length() <= max ? s : s.substring(0, max - 3) + "...";
-    }
-
-    private String formatTime(long ms) {
-        if (ms <= 0) return "sin tiempo";
-        return String.format("%.2fs", ms / 1000f);
-    }
-
-    @Override
-    public void dispose() {
+    private boolean isHovered(Rectangle r) { Vector3 t = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0); game.viewport.unproject(t); return r.contains(t.x, t.y); }
+    private String trim(String s, int max) { return s == null ? "" : (s.length() <= max ? s : s.substring(0, max - 3) + "..."); }
+    @Override public void dispose() {
         if (sr != null) sr.dispose();
+        if (fondoVs != null) { fondoVs.dispose(); fondoVs = null; }
     }
 }

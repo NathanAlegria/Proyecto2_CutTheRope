@@ -12,6 +12,8 @@ import com.badlogic.gdx.graphics.Texture;
 public final class AssetPaths {
     public static final String FONDO = "Fondo.png";
     public static final String FONDO_MENU = "FondoMenu.png";
+    public static final String FONDO_VS = "FondoVS.png";
+    public static final String FONDO_AJUSTES = "FondoA.png";
     public static final String CANDY = "Candy.png";
 
     public static final String OMNOM1 = "OmNom1.png";
@@ -112,6 +114,29 @@ public final class AssetPaths {
         String upperFirst = base.length() > 0
             ? Character.toUpperCase(base.charAt(0)) + base.substring(1)
             : base;
+
+        // IMPORTANTE:
+        // En Windows puede verse solo "FondoA" o "FondoVS", pero realmente puede ser .png.
+        // Por eso, cuando el nombre viene sin extensión, probamos automáticamente .png, .jpg y .jpeg.
+        if (ext.length() == 0) {
+            return new String[] {
+                base,
+                base + ".png",
+                base + ".jpg",
+                base + ".jpeg",
+                base + ".PNG",
+                base + ".JPG",
+                base + ".JPEG",
+                lowerBase,
+                lowerBase + ".png",
+                lowerBase + ".jpg",
+                lowerBase + ".jpeg",
+                upperFirst,
+                upperFirst + ".png",
+                upperFirst + ".jpg",
+                upperFirst + ".jpeg"
+            };
+        }
 
         return new String[] {
             fileName,

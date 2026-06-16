@@ -61,6 +61,12 @@ public class UserData implements Serializable {
     private List<String> sentFriendRequests;    // solicitudes enviadas
     private int    totalScore;        // puntuación global para ranking
 
+    // ── Estadísticas VS ─────────────────────────────────────────────────
+    private int versusPlayed;
+    private int versusWins;
+    private int versusLosses;
+    private List<VersusHistoryRecord> versusHistory;
+
     // ────────────────────────────────────────────────────────────────────────
     //  Constructor
     // ────────────────────────────────────────────────────────────────────────
@@ -97,6 +103,10 @@ public class UserData implements Serializable {
         this.pendingFriendRequests = new ArrayList<>();
         this.sentFriendRequests = new ArrayList<>();
         this.totalScore   = 0;
+        this.versusPlayed = 0;
+        this.versusWins = 0;
+        this.versusLosses = 0;
+        this.versusHistory = new ArrayList<>();
     }
 
     // ────────────────────────────────────────────────────────────────────────
@@ -145,6 +155,26 @@ public class UserData implements Serializable {
         return String.format("%02d:%02d:%02d", hours, mins % 60, secs % 60);
     }
 
+
+    /** Registra el resultado final de una partida VS de 5 niveles. */
+    public void recordVersus(String opponent, String winner, int myStars, long myTimeMs, String reason) {
+        recordVersus(opponent, winner, myStars, myTimeMs, reason, myStars, myTimeMs, 15);
+    }
+
+    /** Registra el VS con datos completos del ganador para mostrarlo en Estadísticas. */
+    public void recordVersus(String opponent, String winner, int myStars, long myTimeMs, String reason,
+                             int winnerStars, long winnerTimeMs, int totalPossibleStars) {
+        ensureVersusHistory();
+        versusPlayed++;
+        if (username != null && username.equalsIgnoreCase(winner)) versusWins++;
+        else if (!"Empate".equalsIgnoreCase(winner)) versusLosses++;
+        versusHistory.add(new VersusHistoryRecord(opponent, winner, myStars, myTimeMs, reason, new Date(),
+                winnerStars, winnerTimeMs, totalPossibleStars));
+        if (versusHistory.size() > 50) versusHistory.remove(0);
+    }
+
+    public void ensureVersusHistory() { if (versusHistory == null) versusHistory = new ArrayList<>(); }
+
     // ────────────────────────────────────────────────────────────────────────
     //  Getters / Setters
     // ────────────────────────────────────────────────────────────────────────
@@ -191,6 +221,10 @@ public class UserData implements Serializable {
     public int     getStarsForLevel(int level) { return levelStars == null || level < 0 || level >= levelStars.length ? 0 : levelStars[level]; }
     public long    getBestTimeForLevel(int level) { return bestTimePerLevel == null || level < 0 || level >= bestTimePerLevel.length ? 0L : bestTimePerLevel[level]; }
     public int     getTotalScore()         { return totalScore; }
+    public int     getVersusPlayed()       { return versusPlayed; }
+    public int     getVersusWins()         { return versusWins; }
+    public int     getVersusLosses()       { return versusLosses; }
+    public List<VersusHistoryRecord> getVersusHistory() { ensureVersusHistory(); return versusHistory; }
 
     // ────────────────────────────────────────────────────────────────────────
     //  Clase interna: registro individual de partida
@@ -217,4 +251,35 @@ public class UserData implements Serializable {
                 level + 1, won ? "Victoria" : "Derrota", stars, timeMs / 1000.0, playedAt);
         }
     }
+
+    public static class VersusHistoryRecord implements Serializable {
+        private static final long serialVersionUID = 1L;
+        public final String opponent;
+        public final String winner;
+        public final int stars;
+        public final long timeMs;
+        public final String reason;
+        public final Date playedAt;
+        public final int winnerStars;
+        public final long winnerTimeMs;
+        public final int totalPossibleStars;
+
+        public VersusHistoryRecord(String opponent, String winner, int stars, long timeMs, String reason, Date playedAt) {
+            this(opponent, winner, stars, timeMs, reason, playedAt, stars, timeMs, 15);
+        }
+
+        public VersusHistoryRecord(String opponent, String winner, int stars, long timeMs, String reason, Date playedAt,
+                                   int winnerStars, long winnerTimeMs, int totalPossibleStars) {
+            this.opponent = opponent;
+            this.winner = winner;
+            this.stars = stars;
+            this.timeMs = timeMs;
+            this.reason = reason;
+            this.playedAt = playedAt;
+            this.winnerStars = winnerStars;
+            this.winnerTimeMs = winnerTimeMs;
+            this.totalPossibleStars = totalPossibleStars;
+        }
+    }
+
 }

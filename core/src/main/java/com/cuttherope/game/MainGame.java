@@ -194,7 +194,18 @@ public class MainGame extends Game {
     }
 
     @Override
+    public void render() {
+        super.render();
+        if (userManager != null) {
+            userManager.heartbeatOnlineSession();
+        }
+    }
+
+    @Override
     public void dispose() {
+        if (userManager != null) {
+            userManager.logout();
+        }
         super.dispose();
         batch.dispose();
         font.dispose();
