@@ -1,13 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
+
 package com.cuttherope.game;
 
-/**
- *
- * @author Nathan
- */
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -18,10 +12,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 
-/**
- * SettingsScreen — ajustada a 800x700.
- * Audio, idioma y avatares funcionan en tiempo real.
- */
+
 public class SettingsScreen implements Screen {
 
     private final MainGame    game;
@@ -31,35 +22,35 @@ public class SettingsScreen implements Screen {
 
     private final Rectangle btnBack      = new Rectangle(18, 18, 140, 40);
 
-    // Volumen música
+
     private final Rectangle btnMusicDown = new Rectangle(362, 456, 44, 36);
     private final Rectangle btnMusicUp   = new Rectangle(416, 456, 44, 36);
 
-    // Volumen SFX
+
     private final Rectangle btnSfxDown   = new Rectangle(362, 398, 44, 36);
     private final Rectangle btnSfxUp     = new Rectangle(416, 398, 44, 36);
 
-    // Toggle música ON/OFF
+
     private final Rectangle btnMusicOn   = new Rectangle(525, 456, 96, 36);
 
-    // Toggle SFX ON/OFF
+
     private final Rectangle btnSfxOn     = new Rectangle(525, 398, 96, 36);
 
-    // Idioma
+
     private final Rectangle btnLang      = new Rectangle(420, 314, 126, 38);
 
-    // Timer
+
     private final Rectangle btnTimer     = new Rectangle(420, 258, 96, 38);
 
-    // Avatares (5)
+
     private final Rectangle[] btnAvatars = new Rectangle[5];
 
     private static final Color[] AVATAR_COLORS = {
-        new Color(0.2f, 0.75f, 0.2f, 1f),  // OmNom1 verde
-        new Color(0.9f, 0.15f, 0.15f, 1f), // OmNom2 rojo
-        new Color(0.7f, 0.2f, 0.9f, 1f),  // OmNom3 morado
-        new Color(0.2f, 0.4f, 0.9f, 1f),  // OmNom4 azul
-        new Color(0.95f, 0.68f, 0.08f, 1f) // OmNom5 amarillo
+        new Color(0.2f, 0.75f, 0.2f, 1f),
+        new Color(0.9f, 0.15f, 0.15f, 1f),
+        new Color(0.7f, 0.2f, 0.9f, 1f),
+        new Color(0.2f, 0.4f, 0.9f, 1f),
+        new Color(0.95f, 0.68f, 0.08f, 1f)
     };
 
     private static final Texture[] OMNOM_AVATAR_TEXTURES = new Texture[5];
@@ -113,7 +104,7 @@ public class SettingsScreen implements Screen {
             sr.end();
         }
 
-        // Capa ligera para conservar el estilo pixel-art morado y mejorar lectura.
+
         sr.begin(ShapeRenderer.ShapeType.Filled);
         sr.setColor(new Color(0.02f, 0.01f, 0.06f, 0.18f));
         sr.rect(0, 0, 800, 700);
@@ -128,7 +119,7 @@ public class SettingsScreen implements Screen {
     }
 
     private void drawPanels() {
-        // Paneles rectangulares para ordenar mejor el contenido y evitar solapes visuales.
+
         sr.begin(ShapeRenderer.ShapeType.Filled);
         sr.setColor(new Color(0.06f, 0.04f, 0.16f, 0.62f));
         sr.rect(20, 390, 760, 150);
@@ -257,7 +248,7 @@ public class SettingsScreen implements Screen {
             sr.setColor(sel ? new Color(0.28f, 0.22f, 0.42f, 1f) : new Color(0.11f, 0.10f, 0.14f, 1f));
             sr.rect(r.x, r.y, r.width, r.height);
 
-            // Panel blanco detrás del Om Nom para que los ojos se vean blancos.
+
             sr.setColor(new Color(1f, 1f, 1f, 0.96f));
             sr.rect(r.x + 14, r.y + 20, r.width - 28, 50);
             sr.end();
@@ -290,7 +281,7 @@ public class SettingsScreen implements Screen {
             return;
         }
 
-        // Respaldo si falta una imagen: se dibuja una versión simple con el color correcto.
+
         sr.begin(ShapeRenderer.ShapeType.Filled);
 
         sr.setColor(new Color(0f, 0f, 0f, 0.38f));
@@ -475,9 +466,7 @@ public class SettingsScreen implements Screen {
 
             ud.setLanguage(ud.getLanguage().equals("es") ? "en" : "es");
 
-            // Este punto es clave:
-            // antes solo se guardaba el idioma,
-            // ahora también se aplica inmediatamente en tiempo real.
+
             MainGame.loadLang(ud.getLanguage());
 
             um.saveUser(ud);
@@ -531,7 +520,7 @@ public class SettingsScreen implements Screen {
             fondoAjustes.dispose();
             fondoAjustes = null;
         }
-        // No se eliminan las texturas aquí para no recargarlas cada vez que se abre Ajustes.
-        // Se liberan al cerrar la aplicación junto con el resto de recursos.
+
+
     }
 }

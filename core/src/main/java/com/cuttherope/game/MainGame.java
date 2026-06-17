@@ -10,14 +10,10 @@ import com.cuttherope.game.UserManager;
 import com.cuttherope.game.AudioManager;
 import com.cuttherope.game.SplashScreen;
 
-/**
- * MainGame - Clase principal del juego Cut the Rope.
- * Extiende Game (ApplicationListener) de libGDX.
- * Gestiona recursos globales compartidos entre pantallas.
- */
+
 public class MainGame extends Game {
 
-    // Recursos globales
+
     public SpriteBatch        batch;
     public BitmapFont         font;
     public BitmapFont         fontLarge;
@@ -25,29 +21,29 @@ public class MainGame extends Game {
     public OrthographicCamera camera;
     public FitViewport        viewport;
 
-    // Managers singleton
+
     public UserManager userManager;
     public AudioManager audioManager;
 
-    // Dimensiones de la ventana virtual
+
     public static final int VIRTUAL_WIDTH  = 800;
     public static final int VIRTUAL_HEIGHT = 700;
     public static final int WINDOW_WIDTH   = 1000;
     public static final int WINDOW_HEIGHT  = 1200;
 
-    // Versión del juego
+
     public static final String VERSION = "1.0";
 
-    // ── Sistema de traducción simple ─────────────────────────────────────────
+
     private static java.util.Map<String,String> translations = new java.util.HashMap<>();
 
-    /** Retorna el texto traducido al idioma activo del usuario. */
+
     public static String t(String key) {
         String v = translations.get(key);
         return v != null ? v : key;
     }
 
-    /** Carga las traducciones según el idioma. */
+
     public static void loadLang(String lang) {
         translations.clear();
         if ("en".equals(lang)) {
@@ -127,7 +123,7 @@ public class MainGame extends Game {
             translations.put("Mapa de niveles", "Level map");
             translations.put("Selecciona un nivel", "Select a level");
             translations.put("VS", "VS");
-            // Estadísticas / VS / textos agregados
+
             translations.put("Historial normal:", "Normal game history:");
             translations.put("Historial de partidas VS:", "VS game history:");
             translations.put("VS jugados:", "VS played:");
@@ -181,7 +177,7 @@ public class MainGame extends Game {
             translations.put("Nivel 4 revisado: mantiene el diseño de referencia, pero ahora el camino del dulce y de las estrellas es más claro y posible.", "Level 4 revised: it keeps the reference design, but now the candy and star path is clearer and possible.");
             translations.put("Nivel 5 basado en la nueva referencia: Om Nom abajo, sin burbuja, estrellas en línea recta y una ruta posible para recogerlas en una sola partida.", "Level 5 based on the new reference: Om Nom below, no bubble, stars in a straight line, and a possible route to collect them in one run.");
 
-            // Login / registro / validaciones
+
             translations.put("Las contraseñas no coinciden.", "Passwords do not match.");
             translations.put("¡Cuenta creada! Inicia sesión.", "Account created! Log in.");
             translations.put("El nombre de usuario no puede estar vacío.", "Username cannot be empty.");
@@ -202,7 +198,7 @@ public class MainGame extends Game {
             translations.put("Número", "Number");
             translations.put("Especial", "Special");
 
-            // Niveles
+
             translations.put("¡Empieza aquí!", "Start here!");
             translations.put("Corta la cuerda para alimentar a Om Nom", "Cut the rope to feed Om Nom");
             translations.put("Doble desafío", "Double challenge");
@@ -214,10 +210,10 @@ public class MainGame extends Game {
             translations.put("¡Reto final!", "Final challenge!");
             translations.put("¡Demuestra que eres el maestro del corte!", "Show that you are the cutting master!");
         }
-        // si es "es" el mapa queda vacío → t() devuelve la clave que ya está en español
+
     }
 
-    /** Aplica idioma y audio del usuario activo en tiempo real. */
+
     public void applyRuntimePreferences(UserData ud) {
         if (ud == null) return;
         loadLang(ud.getLanguage());
@@ -226,32 +222,32 @@ public class MainGame extends Game {
 
     @Override
     public void create() {
-        // Ventana fija solicitada: no pantalla completa, 1000 x 1200.
+
         Gdx.graphics.setWindowedMode(WINDOW_WIDTH, WINDOW_HEIGHT);
 
         batch = new SpriteBatch();
 
-        // Cámara y viewport virtual
+
         camera   = new OrthographicCamera();
         viewport = new FitViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, camera);
         viewport.apply(true);
         batch.setProjectionMatrix(camera.combined);
 
-        // Fuentes básicas usando BitmapFont por defecto
+
         font      = new BitmapFont();
         fontLarge = new BitmapFont();
         fontLarge.getData().setScale(2.5f);
         fontSmall = new BitmapFont();
         fontSmall.getData().setScale(0.85f);
 
-        // Inicializar managers
+
         userManager  = UserManager.getInstance();
         audioManager = AudioManager.getInstance();
 
-        // Idioma inicial por defecto
+
         loadLang("es");
 
-        // Ir a la pantalla inicial
+
         setScreen(new SplashScreen(this));
     }
 

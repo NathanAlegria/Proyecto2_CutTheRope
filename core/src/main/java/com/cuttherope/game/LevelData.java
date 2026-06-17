@@ -12,7 +12,7 @@ public class LevelData {
     public final float candyX, candyY, omNomX, omNomY;
     public final float[] starX, starY;
     public final float[] spikeX, spikeY;
-    public final int[]   spikeDir; // 0=arriba, 1=derecha, 2=izquierda
+    public final int[]   spikeDir;
     public final int lives;
 
     public LevelData(int levelIndex, String title, String hint, int timeLimit, Color ropeColor, Color bgColor1, Color bgColor2, float[] anchorX, float[] anchorY, float candyX, float candyY, float omNomX, float omNomY, float[] starX, float[] starY, int lives) {
@@ -33,10 +33,7 @@ public class LevelData {
     private static final Color BG1  = new Color(0.72f,0.47f,0.22f,1);
     private static final Color BG2  = new Color(0.92f,0.67f,0.34f,1);
 
-    // ── NIVEL 1 ──────────────────────────────────────────────────────────────
-    // Una sola cuerda vertical desde ancla arriba-centro.
-    // Caramelo cuelga y al cortarla cae tocando 3 estrellas alineadas verticalmente.
-    // Om Nom espera en el centro abajo.
+
     private static LevelData level1() {
         return new LevelData(0, "Nivel 1-1",
             "Desliza con el mouse para romper la soga. Toca las estrellas con el caramelo y logra que llegue a Om Nom.",
@@ -50,10 +47,7 @@ public class LevelData {
             3);
     }
 
-    // ── NIVEL 2 ──────────────────────────────────────────────────────────────
-    // Basado en el mockup/PDF: el dulce empieza a la derecha con 3 sogas.
-    // Primero se balancea hacia las estrellas de la izquierda y luego cae hacia
-    // Om Nom, que queda abajo a la derecha como en la imagen.
+
     private static LevelData level2() {
         return new LevelData(1, "Segundo Nivel",
             "Usa el balanceo del mockup: corta primero la soga derecha, toma las estrellas de la izquierda y luego deja caer el dulce hacia Om Nom.",
@@ -84,16 +78,16 @@ public class LevelData {
         return new LevelData(3, "Cuarto Nivel",
             "Nivel 4 ajustado: púas más juntas, hitbox más perdonable y estrellas alineadas al recorrido para poder recoger las 3 en un intento.",
             0, ROPE, BG1, BG2,
-            // Se mantiene la misma estructura del nivel.
+
             new float[]{185, 360, 390, 390},
             new float[]{620, 620, 500, 355},
             200, 500,
             400, 75,
-            // Estrellas ubicadas sobre la trayectoria real del dulce:
-            // salida inicial, paso por el hueco central y bajada final hacia Om Nom.
+
+
             new float[]{250, 360, 392},
             new float[]{425, 300, 205},
-            // Púas más pegadas entre sí, pero dejando un corredor central jugable.
+
             new float[]{325, 355, 425, 455, 305, 340, 440, 475},
             new float[]{350, 350, 350, 350, 205, 205, 205, 205},
             new int[]{0, 0, 0, 0, 0, 0, 0, 0},
@@ -103,15 +97,15 @@ public class LevelData {
         return new LevelData(4, "Quinto Nivel",
             "Nivel 5 basado en la nueva referencia: Om Nom abajo, sin burbuja, estrellas en línea recta y una ruta posible para recogerlas en una sola partida.",
             0, ROPE, BG1, BG2,
-            // Seis sogas como en la imagen: tres a la izquierda y tres a la derecha.
+
             new float[]{110, 95, 110, 690, 705, 690},
             new float[]{560, 355, 145, 560, 355, 145},
             400, 390,
             400, 75,
-            // Tres estrellas en línea recta vertical para que puedan recogerse en una sola caída.
+
             new float[]{400, 400, 400},
             new float[]{295, 205, 150},
-            // Dos columnas verticales de púas, dejando libre el centro.
+
             new float[]{260, 260, 260, 260, 260, 260, 260, 540, 540, 540, 540, 540, 540, 540},
             new float[]{555, 505, 455, 405, 355, 305, 255, 555, 505, 455, 405, 355, 305, 255},
             new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},

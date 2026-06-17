@@ -1,6 +1,6 @@
 package com.cuttherope.game;
 
-/** Clase final con método final solicitada por el proyecto. */
+
 public final class FinalProjectRules {
     private FinalProjectRules() {}
 

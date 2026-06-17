@@ -1,6 +1,6 @@
 package com.cuttherope.game;
 
-/** Enum complejo: cada estado tiene texto, color lógico y permisos. */
+
 public enum FriendshipStatus {
     NONE("Mandar solicitud", true, false, false),
     SENT("Pendiente", false, false, false),

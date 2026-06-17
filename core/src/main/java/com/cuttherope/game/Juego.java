@@ -1,21 +1,11 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
+
 package com.cuttherope.game;
 
-/**
- *
- * @author Nathan
- */
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-/**
- * Juego - Clase base abstracta requerida por el enunciado del proyecto.
- * Define el contrato que todo juego concreto debe implementar.
- * Patrón: Template Method.
- */
+
 public abstract class Juego {
 
     protected int    currentLevel;
@@ -37,32 +27,28 @@ public abstract class Juego {
         this.startTimeMs   = System.currentTimeMillis();
     }
 
-    // ── Métodos abstractos (contrato) ────────────────────────────────────────
 
-    /** Inicializa el estado del nivel actual. */
     public abstract void initLevel(int level);
 
-    /** Actualiza la lógica del juego. delta = tiempo desde último frame en seg. */
+
     public abstract void update(float delta);
 
-    /** Dibuja todos los elementos del juego. */
+
     public abstract void render(SpriteBatch batch);
 
-    /** Libera recursos del nivel. */
+
     public abstract void disposeLevel();
 
-    /** Verifica si se cumple la condición de victoria del nivel. */
+
     public abstract boolean checkWinCondition();
 
-    /** Verifica si se perdió el nivel. */
+
     public abstract boolean checkLoseCondition();
 
-    // ── Template methods ─────────────────────────────────────────────────────
 
-    /** Pausa/reanuda el juego. */
     public void togglePause() { paused = !paused; }
 
-    /** Reinicia el nivel actual. */
+
     public void restartLevel() {
         lives--;
         if (lives <= 0) {
@@ -74,7 +60,7 @@ public abstract class Juego {
         }
     }
 
-    /** Avanza al siguiente nivel. */
+
     public void nextLevel() {
         currentLevel++;
         levelComplete = false;
@@ -82,19 +68,19 @@ public abstract class Juego {
         initLevel(currentLevel);
     }
 
-    /** Calcula el tiempo transcurrido en el nivel actual (ms). */
+
     public long getElapsedTime() {
         if (paused) return elapsedMs;
         return elapsedMs + (System.currentTimeMillis() - startTimeMs);
     }
 
-    /** Formatea el tiempo como mm:ss. */
+
     public String getFormattedTime() {
         long secs = getElapsedTime() / 1000;
         return String.format("%02d:%02d", secs / 60, secs % 60);
     }
 
-    // ── Getters / Setters ────────────────────────────────────────────────────
+
     public int     getCurrentLevel()       { return currentLevel; }
     public int     getLives()              { return lives; }
     public void    setLives(int l)         { this.lives = l; }

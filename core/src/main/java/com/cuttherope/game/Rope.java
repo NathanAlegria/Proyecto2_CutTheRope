@@ -4,12 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 
-/**
- * Rope - cuerda física tipo péndulo.
- * La cuerda ya NO congela el dulce ni le pone velocidad 0.
- * El dulce mantiene su velocidad real y la cuerda solo limita la distancia
- * al ancla, dejando el componente tangencial para que se balancee.
- */
+
 public class Rope {
 
     private static final int SEGMENTS = 14;
@@ -46,7 +41,7 @@ public class Rope {
 
         float dt = Math.max(0.001f, Math.min(delta, 0.033f));
 
-        // Varias pasadas dan estabilidad cuando hay más de una cuerda.
+
         for (int i = 0; i < CONSTRAINT_ITERATIONS; i++) {
             constrainCandy(dt);
         }
@@ -54,12 +49,7 @@ public class Rope {
         rebuildVisualNodes();
     }
 
-    /**
-     * Física tipo resorte-amortiguador.
-     * Antes la cuerda proyectaba el dulce a una posición exacta; con dos cuerdas
-     * eso lo podía dejar pegado en el aire. Ahora la cuerda aplica tensión a la
-     * velocidad del dulce y permite balanceo real con momentum.
-     */
+
     private void constrainCandy(float dt) {
         Vector2 radial = new Vector2(candy.position.x - anchorX, candy.position.y - anchorY);
         float dist = radial.len();
@@ -71,7 +61,7 @@ public class Rope {
         if (stretch > 0f) {
             float radialVelocity = candy.velocity.dot(radial);
 
-            // Tensión: devuelve el dulce hacia el ancla sin matar el componente tangencial.
+
             float stiffness = 34f;
             float damping = 5.5f;
             float tension = (stretch * stiffness) + (radialVelocity * damping);
@@ -80,10 +70,7 @@ public class Rope {
             candy.velocity.y -= radial.y * tension * dt;
         }
 
-        // Restricción rígida: la cuerda NO se alarga. Si el dulce intenta pasar
-        // la longitud original, lo proyecta exactamente al radio de la cuerda.
-        // Se elimina solo la velocidad radial hacia afuera y se conserva la
-        // velocidad tangencial para que siga balanceándose con tensión real.
+
         if (dist > ropeLength) {
             candy.position.set(anchorX + radial.x * ropeLength, anchorY + radial.y * ropeLength);
             float radialVelocity = candy.velocity.dot(radial);
@@ -100,7 +87,7 @@ public class Rope {
             float x = anchorX + (candy.position.x - anchorX) * t;
             float y = anchorY + (candy.position.y - anchorY) * t;
 
-            // Leve curva visual para que no parezca una línea rígida.
+
             float sag = (float)Math.sin(t * Math.PI) * 4f;
             nodes[i].set(x, y - sag);
         }
@@ -133,7 +120,7 @@ public class Rope {
                     nodes[i].x, nodes[i].y,
                     nodes[i + 1].x, nodes[i + 1].y)) {
                 cut = true;
-                // No se toca la velocidad del dulce. Sale con el momentum que ya tenía.
+
                 return true;
             }
         }

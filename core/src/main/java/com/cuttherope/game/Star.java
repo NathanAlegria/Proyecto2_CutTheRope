@@ -1,27 +1,19 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
+
 package com.cuttherope.game;
 
-/**
- *
- * @author Nathan
- */
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 
-/**
- * Star - Estrella coleccionable.
- * Se recolecta cuando el caramelo la toca.
- */
+
 public class Star {
 
     public float   x, y;
     public float   radius = 18f;
     public boolean collected = false;
-    private float  animAngle = 0;   // rotación decorativa
+    private float  animAngle = 0;
     private float  scaleAnim = 1f;
     private float  collectTimer = 0f;
 
@@ -31,16 +23,16 @@ public class Star {
     }
 
     public void update(float delta) {
-        animAngle += 60 * delta;  // gira suavemente
+        animAngle += 60 * delta;
         if (collected) {
             collectTimer += delta;
             scaleAnim = 1f + collectTimer * 3f;
         }
     }
 
-    /** Dibuja la estrella de 5 puntas usando triángulos. */
+
     public void draw(ShapeRenderer sr) {
-        if (collected && collectTimer > 0.3f) return; // ya desapareció
+        if (collected && collectTimer > 0.3f) return;
 
         float alpha = collected ? Math.max(0, 1f - collectTimer * 3f) : 1f;
         float scale = scaleAnim;
@@ -48,12 +40,12 @@ public class Star {
         sr.setColor(new Color(1f, 0.9f, 0f, alpha));
         drawStar(sr, x, y, radius * scale, radius * 0.4f * scale, 5, animAngle);
 
-        // brillo central
+
         sr.setColor(new Color(1f, 1f, 0.6f, alpha * 0.6f));
         sr.circle(x, y, radius * 0.3f * scale);
     }
 
-    /** Dibuja una estrella de nPoints puntas. */
+
     private void drawStar(ShapeRenderer sr, float cx, float cy,
                           float outerR, float innerR, int nPoints, float rotation) {
         float[] vx = new float[nPoints * 2];
@@ -70,7 +62,7 @@ public class Star {
         }
     }
 
-    /** Verifica colisión circular con el caramelo. */
+
     public boolean checkCollision(Candy candy) {
         if (collected) return false;
         float dx = candy.position.x - x;

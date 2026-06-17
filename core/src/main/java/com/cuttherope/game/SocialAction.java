@@ -1,6 +1,6 @@
 package com.cuttherope.game;
 
-/** Clase abstracta para demostrar polimorfismo en acciones sociales. */
+
 public abstract class SocialAction {
     protected final UserManager userManager;
     protected final String currentUsername;

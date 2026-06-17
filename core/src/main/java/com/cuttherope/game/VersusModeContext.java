@@ -1,6 +1,6 @@
 package com.cuttherope.game;
 
-/** Contexto temporal para jugar los 5 niveles de una partida VS normal. */
+
 public final class VersusModeContext {
     private static String activeMatchId;
 

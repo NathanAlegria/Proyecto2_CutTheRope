@@ -93,7 +93,7 @@ public class RankingScreen implements Screen {
         sr.setColor(new Color(0.06f, 0.04f, 0.18f, 0.35f));
         sr.rect(mainPanel.x + 2, mainPanel.y + 2, mainPanel.width - 4, mainPanel.height - 4);
 
-        // Bloques rectangulares decorativos en las esquinas, sin usar círculos.
+
         sr.setColor(new Color(0.92f, 0.72f, 0.08f, 0.55f));
         sr.rect(mainPanel.x + mainPanel.width - 92, mainPanel.y + mainPanel.height - 86, 92, 86);
         sr.setColor(new Color(0.50f, 0.18f, 0.88f, 0.42f));

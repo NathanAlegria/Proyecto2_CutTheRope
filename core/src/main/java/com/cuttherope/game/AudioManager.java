@@ -1,13 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
+
 package com.cuttherope.game;
 
-/**
- *
- * @author Nathan
- */
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
@@ -15,30 +9,16 @@ import com.badlogic.gdx.audio.Sound;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * AudioManager - Singleton para gestión de audio.
- * Maneja música de fondo y efectos de sonido.
- *
- * Coloca estos archivos dentro de assets/audio/:
- *
- * menu_theme.mp3
- * game_theme.mp3
- * cut.wav
- * eat.wav
- * star.wav
- * win.wav
- * lose.wav
- * click.wav
- */
+
 public class AudioManager {
 
     private static AudioManager instance;
 
-    // ── Rutas de música ──────────────────────────────────────────────────────
+
     public static final String MUSIC_MENU = "audio/menu_theme.mp3";
     public static final String MUSIC_GAME = "audio/game_theme.mp3";
 
-    // ── Rutas de efectos ─────────────────────────────────────────────────────
+
     public static final String SFX_CUT   = "audio/cut.wav";
     public static final String SFX_EAT   = "audio/eat.wav";
     public static final String SFX_STAR  = "audio/star.wav";
@@ -58,7 +38,7 @@ public class AudioManager {
 
     private final Map<String, Sound> soundCache = new HashMap<>();
 
-    // ── Hilo de precarga ─────────────────────────────────────────────────────
+
     private Thread preloadThread;
     private volatile boolean preloadComplete = false;
 
@@ -72,10 +52,7 @@ public class AudioManager {
         return instance;
     }
 
-    /**
-     * Inicia la verificación de sonidos en un hilo secundario.
-     * No crea Sound/Music aquí para evitar problemas con libGDX/OpenAL.
-     */
+
     public void preloadAsync() {
         if (preloadThread != null && preloadThread.isAlive()) {
             return;
@@ -111,9 +88,6 @@ public class AudioManager {
         preloadThread.start();
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Música
-    // ────────────────────────────────────────────────────────────────────────
 
     public void playMenuMusic() {
         playMusic(MUSIC_MENU);
@@ -123,9 +97,7 @@ public class AudioManager {
         playMusic(MUSIC_GAME);
     }
 
-    /**
-     * Reproduce una pista de música en loop.
-     */
+
     public void playMusic(String path) {
         pendingMusicPath = path;
 
@@ -139,7 +111,7 @@ public class AudioManager {
                 return;
             }
 
-            // Si ya está sonando la misma música, no la reinicia
+
             if (currentMusic != null && path.equals(currentMusicPath)) {
                 currentMusic.setVolume(musicVolume);
 
@@ -150,7 +122,7 @@ public class AudioManager {
                 return;
             }
 
-            // Detener música anterior
+
             if (currentMusic != null) {
                 currentMusic.stop();
                 currentMusic.dispose();
@@ -194,9 +166,6 @@ public class AudioManager {
         }
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Efectos de sonido
-    // ────────────────────────────────────────────────────────────────────────
 
     public void playSound(String path) {
         if (!sfxEnabled) {
@@ -248,9 +217,6 @@ public class AudioManager {
         playSound(SFX_CLICK);
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Volúmenes
-    // ────────────────────────────────────────────────────────────────────────
 
     public void setMusicVolume(float volume) {
         musicVolume = clamp01(volume);
@@ -272,9 +238,6 @@ public class AudioManager {
         return sfxVolume;
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Activar / desactivar audio
-    // ────────────────────────────────────────────────────────────────────────
 
     public boolean isMusicEnabled() {
         return musicEnabled;
@@ -298,18 +261,7 @@ public class AudioManager {
         sfxEnabled = enabled;
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Preferencias del usuario
-    // ────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Aplica las preferencias guardadas del usuario actual.
-     * Requiere que UserData tenga:
-     * getMusicVolume()
-     * getSfxVolume()
-     * isMusicEnabled()
-     * isSfxEnabled()
-     */
     public void applyUserPrefs(UserData ud) {
         if (ud == null) {
             return;
@@ -325,9 +277,6 @@ public class AudioManager {
         return preloadComplete;
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Utilidades
-    // ────────────────────────────────────────────────────────────────────────
 
     private float clamp01(float value) {
         if (value < 0f) {
@@ -341,9 +290,6 @@ public class AudioManager {
         return value;
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Liberar recursos
-    // ────────────────────────────────────────────────────────────────────────
 
     public void dispose() {
         if (currentMusic != null) {

@@ -3,7 +3,7 @@ package com.cuttherope.game;
 import java.io.Serializable;
 import java.util.Date;
 
-/** Partida VS binaria: solicitud, aceptación, listo y resultados nivel 1-5. */
+
 public class VersusMatch implements Serializable {
     private static final long serialVersionUID = 1L;
 

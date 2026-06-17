@@ -95,7 +95,7 @@ public class VersusScreen extends SocialScreenBase {
             sr.end();
         }
 
-        // Capa oscura suave para que el texto y los paneles siempre se lean bien.
+
         sr.begin(ShapeRenderer.ShapeType.Filled);
         sr.setColor(new Color(0f, 0f, 0f, 0.22f));
         sr.rect(0, 0, 800, 700);
@@ -217,9 +217,8 @@ public class VersusScreen extends SocialScreenBase {
         if (current == null) return;
         for (VersusMatch m : matches) {
             if (m != null && m.state == VersusMatch.State.IN_PROGRESS && m.includes(current.getUsername())) {
-                // La cuenta que aceptó entra automáticamente. Se deja una pausa mínima
-                // para no forzar dos cambios de pantalla OpenGL exactamente en el mismo instante
-                // cuando se prueban dos instancias en una misma computadora.
+
+
                 scheduleVersusStart(m.id, 0.65f);
                 return;
             }

@@ -4,11 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 
-/**
- * Cargador seguro de imágenes.
- * Busca en varias carpetas y acepta variantes de nombre para evitar errores
- * cuando el archivo se llama OmNom1.png, omnom1.png, OmNom 1.png, etc.
- */
+
 public final class AssetPaths {
     public static final String FONDO = "Fondo.png";
     public static final String FONDO_MENU = "FondoMenu.png";
@@ -23,7 +19,7 @@ public final class AssetPaths {
     public static final String OMNOM5 = "OmNom5.png";
 
     private AssetPaths() {}
- 
+
     public static Texture texture(String fileName) {
         Texture t = textureOrNull(fileName);
         if (t == null) {
@@ -106,7 +102,7 @@ public final class AssetPaths {
         return null;
     }
 
-    /** Devuelve el nombre correcto del avatar según el id guardado. */
+
     public static String omNomFileForAvatar(String avatarId) {
         int n = 1;
         if (avatarId != null && avatarId.startsWith("avatar")) {
@@ -130,9 +126,7 @@ public final class AssetPaths {
             ? Character.toUpperCase(base.charAt(0)) + base.substring(1)
             : base;
 
-        // IMPORTANTE:
-        // En Windows puede verse solo "FondoA" o "FondoVS", pero realmente puede ser .png.
-        // Por eso, cuando el nombre viene sin extensión, probamos automáticamente .png, .jpg y .jpeg.
+
         if (ext.length() == 0) {
             return new String[] {
                 base,

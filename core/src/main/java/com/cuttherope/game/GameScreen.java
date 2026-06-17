@@ -1,13 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
+
 package com.cuttherope.game;
 
-/**
- *
- * @author Nathan
- */
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -27,11 +21,7 @@ import com.cuttherope.game.StatsSaveThread;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * GameScreen - Pantalla de juego principal.
- * Extiende Juego e implementa Screen.
- * Gestiona física de cuerdas, estrellas, Om Nom, temporizador, audio e idioma.
- */
+
 public class GameScreen extends Juego implements Screen {
 
     private final MainGame game;
@@ -41,26 +31,26 @@ public class GameScreen extends Juego implements Screen {
     private ShapeRenderer sr;
     private Texture fondo;
 
-    // ── Entidades del nivel ───────────────────────────────────────────────────
+
     private Candy candy;
     private OmNom omNom;
     private List<Rope> ropes;
     private List<Star> stars;
     private List<Spike> spikes;
 
-    // ── Burbuja del nivel 5 ─────────────────────────────────────────────────
+
     private boolean bubbleEnabled = false;
     private float bubbleX = 0f;
     private float bubbleY = 0f;
     private float bubbleRadius = 0f;
     private float bubbleLift = 920f;
 
-    // ── Estado de corte ───────────────────────────────────────────────────────
+
     private boolean cutting = false;
     private float cutStartX, cutStartY;
     private float cutCurrentX, cutCurrentY;
 
-    // ── Pantalla de resultado ─────────────────────────────────────────────────
+
     private enum GameState {
         PLAYING, WIN, LOSE, PAUSED
     }
@@ -68,17 +58,17 @@ public class GameScreen extends Juego implements Screen {
     private GameState state = GameState.PLAYING;
     private float resultTimer = 0f;
 
-    // ── HUD ───────────────────────────────────────────────────────────────────
+
     private int starsCollected = 0;
     private int displayTime = 0;
     private boolean timeWarning = false;
     private boolean timeoutLosePending = false;
     private long levelStartMs;
 
-    // ── Hilo de temporizador ─────────────────────────────────────────────────
+
     private GameLogicThread timerThread;
 
-    // ── Botones HUD ──────────────────────────────────────────────────────────
+
     private final Rectangle btnPause = new Rectangle(640, 660, 55, 32);
     private final Rectangle btnMenu = new Rectangle(578, 660, 55, 32);
     private final Rectangle btnRestart = new Rectangle(310, 210, 180, 45);
@@ -97,18 +87,17 @@ public class GameScreen extends Juego implements Screen {
         return VersusModeContext.isActive();
     }
 
-    // ── Juego abstracto: implementaciones ────────────────────────────────────
 
     @Override
     public void initLevel(int level) {
         currentLevelData = allLevels[level];
         LevelData d = currentLevelData;
 
-        // Inicializar entidades
+
         candy = new Candy(d.candyX, d.candyY);
         omNom = new OmNom(d.omNomX, d.omNomY);
 
-        // Aplicar avatar del usuario a Om Nom
+
         UserData udInit = um.getCurrentUser();
         if (udInit != null) {
             omNom.setAvatarColor(udInit.getAvatarId());
@@ -117,31 +106,31 @@ public class GameScreen extends Juego implements Screen {
         ropes = new ArrayList<>();
         stars = new ArrayList<>();
 
-        // Crear cuerdas
+
         for (int i = 0; i < d.anchorX.length; i++) {
             ropes.add(new Rope(d.anchorX[i], d.anchorY[i], candy, d.ropeColor));
         }
 
-        // Crear estrellas
+
         for (int i = 0; i < d.starX.length; i++) {
             stars.add(new Star(d.starX[i], d.starY[i]));
         }
 
-        // Crear puas
+
         spikes = new ArrayList<>();
         for (int i = 0; i < d.spikeX.length; i++) {
             int dir = (d.spikeDir != null && i < d.spikeDir.length) ? d.spikeDir[i] : 0;
             spikes.add(new Spike(d.spikeX[i], d.spikeY[i], dir));
         }
 
-        // La burbuja quedó desactivada en la versión actual del nivel 5.
+
         bubbleEnabled = false;
         bubbleX = 390f;
         bubbleY = 95f;
         bubbleRadius = 52f;
         bubbleLift = 920f;
 
-        // Reiniciar estado
+
         starsCollected = 0;
         timeWarning = false;
         timeoutLosePending = false;
@@ -155,7 +144,7 @@ public class GameScreen extends Juego implements Screen {
         startTimeMs = System.currentTimeMillis();
         elapsedMs = 0;
 
-        // Iniciar/reiniciar hilo de temporizador
+
         startTimerThread(d.timeLimit);
     }
 
@@ -218,17 +207,13 @@ public class GameScreen extends Juego implements Screen {
             }
         }
 
-        // El dulce SIEMPRE actualiza gravedad y velocidad.
-        // Antes, cuando había cuerdas, la soga le ponía velocity = 0 y por eso
-        // se quedaba pegado en el aire o caía sin momentum.
+
         candy.update(dt);
 
-        // En el nivel 5, la burbuja empuja el dulce hacia arriba sin quitar
-        // el efecto de las cuerdas.
+
         applyBubblePhysics(dt);
 
-        // Después de aplicar gravedad, las cuerdas activas limitan la distancia
-        // al ancla. Eso conserva el componente tangencial y produce balanceo.
+
         if (activeRopes > 0) {
             for (int i = 0; i < 4; i++) {
                 for (Rope r : ropes) {
@@ -239,7 +224,7 @@ public class GameScreen extends Juego implements Screen {
             }
         }
 
-        // Actualizar estrellas
+
         for (Star s : stars) {
             s.update(delta);
 
@@ -251,7 +236,7 @@ public class GameScreen extends Juego implements Screen {
             }
         }
 
-        // Verificar colision con puas
+
         for (Spike sp : spikes) {
             if (sp.checkCollision(candy)) {
                 candy.fallen = true;
@@ -259,10 +244,10 @@ public class GameScreen extends Juego implements Screen {
             }
         }
 
-        // Actualizar Om Nom
+
         omNom.update(delta);
 
-        // Verificar victoria
+
         if (checkWinCondition()) {
             levelComplete = true;
             state = GameState.WIN;
@@ -280,7 +265,7 @@ public class GameScreen extends Juego implements Screen {
             recordResult(true);
         }
 
-        // Verificar derrota
+
         if (checkLoseCondition()) {
             state = GameState.LOSE;
 
@@ -293,7 +278,7 @@ public class GameScreen extends Juego implements Screen {
             recordResult(false);
         }
 
-        // Contador de tiempo cuando no hay límite
+
         if (currentLevelData.timeLimit == 0) {
             displayTime = (int) (getElapsedTime() / 1000);
         }
@@ -311,7 +296,7 @@ public class GameScreen extends Juego implements Screen {
 
     @Override
     public void render(SpriteBatch batch) {
-        // No usado. Se usa render(float).
+
     }
 
     @Override
@@ -333,7 +318,6 @@ public class GameScreen extends Juego implements Screen {
         }
     }
 
-    // ── Screen: render ────────────────────────────────────────────────────────
 
     @Override
     public void render(float delta) {
@@ -341,7 +325,7 @@ public class GameScreen extends Juego implements Screen {
             update(delta);
         }
 
-        // Aplicar viewport virtual
+
         game.viewport.apply();
         game.batch.setProjectionMatrix(game.camera.combined);
         sr.setProjectionMatrix(game.camera.combined);
@@ -357,7 +341,7 @@ public class GameScreen extends Juego implements Screen {
         }
         game.batch.end();
 
-        // Entidades
+
         sr.begin(ShapeRenderer.ShapeType.Filled);
 
         drawBubble();
@@ -374,7 +358,7 @@ public class GameScreen extends Juego implements Screen {
             r.draw(sr);
         }
 
-        // Línea de corte del dedo
+
         if (cutting) {
             sr.setColor(new Color(1f, 1f, 1f, 0.6f));
             sr.rectLine(cutStartX, cutStartY, cutCurrentX, cutCurrentY, 2f);
@@ -405,10 +389,9 @@ public class GameScreen extends Juego implements Screen {
         handleButtonInput();
     }
 
-    // ── HUD ───────────────────────────────────────────────────────────────────
 
     private void drawHUD() {
-        // Barra HUD superior
+
         sr.begin(ShapeRenderer.ShapeType.Filled);
 
         sr.setColor(new Color(0f, 0f, 0f, 0.45f));
@@ -423,7 +406,7 @@ public class GameScreen extends Juego implements Screen {
 
         game.batch.begin();
 
-        // Nombre del nivel
+
         game.font.setColor(Color.WHITE);
         game.font.draw(
             game.batch,
@@ -432,11 +415,11 @@ public class GameScreen extends Juego implements Screen {
             690
         );
 
-        // Vidas
+
         game.font.setColor(new Color(1f, 0.4f, 0.4f, 1f));
         game.font.draw(game.batch, buildLivesStr(lives), 155, 690);
 
-        // Estrellas
+
         game.font.setColor(new Color(1f, 0.85f, 0f, 1f));
         game.font.draw(
             game.batch,
@@ -445,20 +428,20 @@ public class GameScreen extends Juego implements Screen {
             690
         );
 
-        // Tiempo
+
         boolean noLimit = currentLevelData.timeLimit == 0;
         game.font.setColor(timeWarning && !noLimit ? new Color(1f, 0.3f, 0.3f, 1f) : Color.WHITE);
 
         String timeLabel = MainGame.t("Tiempo:") + " " + displayTime + "s";
         game.font.draw(game.batch, timeLabel, 430, 690);
 
-        // Puntuación
+
         game.font.setColor(new Color(0.8f, 0.8f, 1f, 1f));
         game.font.draw(game.batch, MainGame.t("Pts:") + " " + score, 570, 690);
 
         game.batch.end();
 
-        // Botones HUD
+
         drawHudBtn(btnPause, isPaused() ? MainGame.t("Play") : "II");
         drawHudBtn(btnMenu, MainGame.t("Menú"));
     }
@@ -482,7 +465,6 @@ public class GameScreen extends Juego implements Screen {
         game.batch.end();
     }
 
-    // ── Overlays ─────────────────────────────────────────────────────────────
 
     private void drawWinOverlay() {
         sr.begin(ShapeRenderer.ShapeType.Filled);
@@ -610,7 +592,6 @@ public class GameScreen extends Juego implements Screen {
         game.batch.end();
     }
 
-    // ── Input ──────────────────────────────────────────────────────────────────
 
     private void handleTouchInput() {
         if (state != GameState.PLAYING) {
@@ -635,7 +616,7 @@ public class GameScreen extends Juego implements Screen {
             cutCurrentX = mx;
             cutCurrentY = my;
 
-            // Intentar cortar cuerdas con el trayecto actual
+
             for (Rope r : ropes) {
                 if (r.trycut(cutStartX, cutStartY, cutCurrentX, cutCurrentY)) {
                     game.audioManager.playCut();
@@ -736,7 +717,6 @@ public class GameScreen extends Juego implements Screen {
         dispose();
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private String buildLivesStr(int currentLives) {
         int safeLives = Math.max(0, currentLives);
@@ -764,14 +744,13 @@ public class GameScreen extends Juego implements Screen {
         float insideRadius = bubbleRadius + candy.radius * 0.35f;
 
         if (dx * dx + dy * dy <= insideRadius * insideRadius) {
-            // Empuje vertical principal.
+
             candy.velocity.y += bubbleLift * dt;
 
-            // Ligero centrado horizontal para que el dulce permanezca dentro de la burbuja,
-            // pero sigue respondiendo a las cuerdas.
+
             candy.velocity.x += (bubbleX - candy.position.x) * 1.35f * dt;
 
-            // Limitar velocidad para que no salga disparado.
+
             if (candy.velocity.y > 380f) {
                 candy.velocity.y = 380f;
             }
@@ -831,9 +810,7 @@ public class GameScreen extends Juego implements Screen {
         }
     }
 
-    /**
-     * Calcula estrellas 1-3 según rendimiento.
-     */
+
     private int computeStars() {
         if (starsCollected == stars.size()) {
             long elapsed = System.currentTimeMillis() - levelStartMs;
@@ -873,7 +850,6 @@ public class GameScreen extends Juego implements Screen {
         }
     }
 
-    // ── Screen lifecycle ──────────────────────────────────────────────────────
 
     @Override
     public void show() {

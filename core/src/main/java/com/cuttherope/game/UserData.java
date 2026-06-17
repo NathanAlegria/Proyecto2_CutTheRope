@@ -1,75 +1,64 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
+
 package com.cuttherope.game;
 
-/**
- *
- * @author Nathan
- */
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-/**
- * UserData - Modelo de datos del usuario.
- * Implementa Serializable para persistencia en archivos binarios.
- * Almacena toda la información requerida por el proyecto.
- */
+
 public class UserData implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    // ── Datos de identidad ──────────────────────────────────────────────────
-    private String username;          // Identificador único
-    private String passwordHash;      // Contraseña (hasheada con SHA-256)
-    private String fullName;          // Nombre completo
-    private String avatarId;          // ID del avatar seleccionado ("avatar1"…"avatar5")
 
-    // ── Timestamps ──────────────────────────────────────────────────────────
+    private String username;
+    private String passwordHash;
+    private String fullName;
+    private String avatarId;
+
+
     private Date registrationDate;
     private Date lastLoginDate;
 
-    // ── Estadísticas generales ───────────────────────────────────────────────
+
     private int    totalGamesPlayed;
-    private long   totalTimePlayed;      // milisegundos
+    private long   totalTimePlayed;
     private int    totalStarsCollected;
-    private int    highestLevelReached;  // 1-5
+    private int    highestLevelReached;
 
-    // ── Progreso por nivel (5 niveles) ───────────────────────────────────────
-    private int[]    levelStars;         // estrellas obtenidas por nivel (0-3)
-    private boolean[] levelUnlocked;     // si el nivel está desbloqueado
-    private long[]   bestTimePerLevel;   // mejor tiempo en ms por nivel
-    private int[]    attemptsPerLevel;   // intentos por nivel
 
-    // ── Historial de partidas ────────────────────────────────────────────────
+    private int[]    levelStars;
+    private boolean[] levelUnlocked;
+    private long[]   bestTimePerLevel;
+    private int[]    attemptsPerLevel;
+
+
     private List<GameRecord> gameHistory;
 
-    // ── Preferencias ────────────────────────────────────────────────────────
-    private float   musicVolume;      // 0.0 - 1.0
-    private float   sfxVolume;        // 0.0 - 1.0
-    private String  language;         // "es" | "en"
+
+    private float   musicVolume;
+    private float   sfxVolume;
+    private String  language;
     private boolean showTimer;
-    private Boolean musicEnabled;     // Boolean para compatibilidad con usuarios antiguos
-    private Boolean sfxEnabled;       // Boolean para compatibilidad con usuarios antiguos
+    private Boolean musicEnabled;
+    private Boolean sfxEnabled;
 
-    // ── Social ──────────────────────────────────────────────────────────────
-    private List<String> friends;     // usernames de amigos
-    private List<String> pendingFriendRequests; // solicitudes recibidas
-    private List<String> sentFriendRequests;    // solicitudes enviadas
-    private int    totalScore;        // puntuación global para ranking
 
-    // ── Estadísticas VS ─────────────────────────────────────────────────
+    private List<String> friends;
+    private List<String> pendingFriendRequests;
+    private List<String> sentFriendRequests;
+    private int    totalScore;
+
+
     private int versusPlayed;
     private int versusWins;
     private int versusLosses;
     private List<VersusHistoryRecord> versusHistory;
 
-    // ────────────────────────────────────────────────────────────────────────
-    //  Constructor
-    // ────────────────────────────────────────────────────────────────────────
+
     public UserData(String username, String passwordHash, String fullName) {
         this.username         = username;
         this.passwordHash     = passwordHash;
@@ -88,7 +77,7 @@ public class UserData implements Serializable {
         this.bestTimePerLevel = new long[5];
         this.attemptsPerLevel = new int[5];
 
-        // Solo el nivel 1 empieza desbloqueado
+
         this.levelUnlocked[0] = true;
         for (int i = 1; i < 5; i++) this.levelUnlocked[i] = false;
 
@@ -109,45 +98,41 @@ public class UserData implements Serializable {
         this.versusHistory = new ArrayList<>();
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    //  Métodos de negocio
-    // ────────────────────────────────────────────────────────────────────────
 
-    /** Registra el resultado de una partida y actualiza estadísticas. */
     public void recordGame(int level, int stars, long timeMs, boolean won) {
         totalGamesPlayed++;
         totalTimePlayed += timeMs;
         attemptsPerLevel[level]++;
 
         if (won) {
-            // Actualizar estrellas si mejora
+
             if (stars > levelStars[level]) {
                 int diff = stars - levelStars[level];
                 levelStars[level] = stars;
                 totalStarsCollected += diff;
             }
-            // Mejor tiempo
+
             if (bestTimePerLevel[level] == 0 || timeMs < bestTimePerLevel[level]) {
                 bestTimePerLevel[level] = timeMs;
             }
-            // Desbloquear siguiente nivel
+
             if (level + 1 < 5) {
                 levelUnlocked[level + 1] = true;
             }
             if (level + 1 > highestLevelReached) {
                 highestLevelReached = level + 1;
             }
-            // Puntuación: estrellas * 1000 - tiempo en segundos
+
             totalScore += stars * 1000 - (int)(timeMs / 1000);
             if (totalScore < 0) totalScore = 0;
         }
 
         gameHistory.add(new GameRecord(level, stars, timeMs, won, new Date()));
-        // Mantener historial razonable
+
         if (gameHistory.size() > 100) gameHistory.remove(0);
     }
 
-    /** Retorna tiempo total en formato legible. */
+
     public String getFormattedTotalTime() {
         long secs  = totalTimePlayed / 1000;
         long mins  = secs / 60;
@@ -156,12 +141,11 @@ public class UserData implements Serializable {
     }
 
 
-    /** Registra el resultado final de una partida VS de 5 niveles. */
     public void recordVersus(String opponent, String winner, int myStars, long myTimeMs, String reason) {
         recordVersus(opponent, winner, myStars, myTimeMs, reason, myStars, myTimeMs, 15);
     }
 
-    /** Registra el VS con datos completos del ganador para mostrarlo en Estadísticas. */
+
     public void recordVersus(String opponent, String winner, int myStars, long myTimeMs, String reason,
                              int winnerStars, long winnerTimeMs, int totalPossibleStars) {
         ensureVersusHistory();
@@ -175,9 +159,7 @@ public class UserData implements Serializable {
 
     public void ensureVersusHistory() { if (versusHistory == null) versusHistory = new ArrayList<>(); }
 
-    // ────────────────────────────────────────────────────────────────────────
-    //  Getters / Setters
-    // ────────────────────────────────────────────────────────────────────────
+
     public String  getUsername()           { return username; }
     public String  getPasswordHash()       { return passwordHash; }
     public void    setPasswordHash(String h){ this.passwordHash = h; }
@@ -226,9 +208,7 @@ public class UserData implements Serializable {
     public int     getVersusLosses()       { return versusLosses; }
     public List<VersusHistoryRecord> getVersusHistory() { ensureVersusHistory(); return versusHistory; }
 
-    // ────────────────────────────────────────────────────────────────────────
-    //  Clase interna: registro individual de partida
-    // ────────────────────────────────────────────────────────────────────────
+
     public static class GameRecord implements Serializable {
         private static final long serialVersionUID = 1L;
         public final int  level;

@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 
-/** Herencia simple funcional: las pantallas sociales heredan dibujo común. */
+
 public abstract class SocialScreenBase implements Screen {
     protected final MainGame game;
     protected final UserManager um;

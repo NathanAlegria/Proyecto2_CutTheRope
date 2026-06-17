@@ -1,28 +1,14 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
+
 package com.cuttherope.game;
 
-/**
- *
- * @author Nathan
- */
+
 import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-/**
- * UserManager - Singleton que gestiona registro, login y persistencia
- * de usuarios en archivos binarios (serialización Java).
- *
- * Estructura de carpetas:
- *   usuario/<nombreUsuario>/usuario.dat   ← UserData serializado en binario
- *
- * Ejemplo:
- *   usuario/jeremias/usuario.dat
- */
+
 public class UserManager {
 
     private static UserManager instance;
@@ -33,16 +19,16 @@ public class UserManager {
     private static final long ONLINE_LOCK_TIMEOUT_MS = 45L * 1000L;
     private static final long VS_REQUEST_TIMEOUT_MS = 60L * 1000L;
 
-    private UserData currentUser;               // usuario en sesión
-    private Map<String, Integer> rankingCache;  // username → score
+    private UserData currentUser;
+    private Map<String, Integer> rankingCache;
 
-    // ── Singleton ────────────────────────────────────────────────────────────
+
     private UserManager() {
         rankingCache = new LinkedHashMap<>();
         new File(BASE_DIR).mkdirs();
         new File(VS_DIR).mkdirs();
 
-        // Si el usuario cierra la ventana con la X, intentamos liberar la sesión.
+
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try { logout(); } catch (Exception ignored) {}
         }));
@@ -53,14 +39,9 @@ public class UserManager {
         return instance;
     }
 
-    // ── Registro ─────────────────────────────────────────────────────────────
 
-    /**
-     * Registra un nuevo usuario.
-     * @return null si OK, mensaje de error si falla.
-     */
     public String register(String username, String password, String fullName) {
-        // Validaciones
+
         if (username == null || username.trim().isEmpty())
             return "El nombre de usuario no puede estar vacío.";
         if (username.length() < 3)
@@ -74,18 +55,15 @@ public class UserManager {
         if (fullName == null || fullName.trim().isEmpty())
             return "El nombre completo no puede estar vacío.";
 
-        // Crear y guardar
+
         UserData ud = new UserData(username.trim().toLowerCase(),
                                    hashPassword(password),
                                    fullName.trim());
         saveUser(ud);
-        return null; // éxito
+        return null;
     }
 
-    /**
-     * Valida requisitos de contraseña.
-     * Retorna null si es válida, mensaje de error si no.
-     */
+
     public String validatePassword(String password) {
         if (password == null || password.length() < 8)
             return "La contraseña debe tener al menos 8 caracteres.";
@@ -104,12 +82,7 @@ public class UserManager {
         return null;
     }
 
-    // ── Login ─────────────────────────────────────────────────────────────────
 
-    /**
-     * Inicia sesión.
-     * @return null si OK, mensaje de error si falla.
-     */
     public String login(String username, String password) {
         if (username == null || password == null)
             return "Credenciales inválidas.";
@@ -128,7 +101,7 @@ public class UserManager {
         ud.setLastLoginDate(new Date());
         saveUser(ud);
         currentUser = ud;
-        return null; // éxito
+        return null;
     }
 
     public void logout() {
@@ -141,8 +114,6 @@ public class UserManager {
     }
 
 
-    // ── Bloqueo de usuario en línea ─────────────────────────────────────────
-
     private File onlineFile(String username) {
         return new File(BASE_DIR + clean(username), "online.lock");
     }
@@ -151,8 +122,7 @@ public class UserManager {
         File f = onlineFile(username);
         if (!f.exists()) return false;
 
-        // Soluciona el problema cuando se cierra la ventana sin hacer logout:
-        // si el archivo online.lock quedó viejo, se considera sesión fantasma.
+
         long age = System.currentTimeMillis() - f.lastModified();
         if (age > ONLINE_LOCK_TIMEOUT_MS) {
             f.delete();
@@ -161,7 +131,7 @@ public class UserManager {
         return true;
     }
 
-    /** Mantiene viva la sesión activa actualizando la fecha del online.lock. */
+
     public void heartbeatOnlineSession() {
         if (currentUser == null || sessionToken == null) return;
         File f = onlineFile(currentUser.getUsername());
@@ -185,7 +155,7 @@ public class UserManager {
         File f = onlineFile(username);
         if (!f.exists()) return;
 
-        // Evita borrar la sesión de otra ventana si el lock fue creado después.
+
         if (sessionToken != null) {
             try (BufferedReader br = new BufferedReader(new FileReader(f))) {
                 String tokenFile = br.readLine();
@@ -195,7 +165,6 @@ public class UserManager {
         f.delete();
     }
 
-    // ── Persistencia ──────────────────────────────────────────────────────────
 
     public void saveUser(UserData ud) {
         File dir = new File(BASE_DIR + ud.getUsername());
@@ -223,14 +192,12 @@ public class UserManager {
         return new File(BASE_DIR + username.trim().toLowerCase() + "/usuario.dat").exists();
     }
 
-    /** Guarda el progreso del usuario actual tras una partida. */
+
     public void saveCurrentUser() {
         if (currentUser != null) saveUser(currentUser);
     }
 
-    // ── Ranking ───────────────────────────────────────────────────────────────
 
-    /** Carga todos los usuarios y devuelve lista ordenada por score descendente. */
     public List<UserData> getRanking() {
         List<UserData> list = getAllUsers();
         list.sort((a, b) -> Integer.compare(b.getTotalScore(), a.getTotalScore()));
@@ -238,13 +205,11 @@ public class UserManager {
     }
 
 
-    // ── Social / amistades ───────────────────────────────────────────────────
-
     public List<UserData> getAllUsers() {
         List<UserData> users = new ArrayList<>();
         File base = new File(BASE_DIR);
         File[] dirs = base.listFiles(File::isDirectory);
-        loadUsersRecursive(dirs, 0, users); // Recursividad #1: carga de usuarios
+        loadUsersRecursive(dirs, 0, users);
         return users;
     }
 
@@ -264,7 +229,7 @@ public class UserManager {
         if (me == null) return FriendshipStatus.NONE;
         me.ensureSocialLists();
 
-        if (containsRecursive(me.getFriends(), target, 0)) return FriendshipStatus.FRIEND; // Recursividad #2: búsqueda en lista
+        if (containsRecursive(me.getFriends(), target, 0)) return FriendshipStatus.FRIEND;
         if (containsRecursive(me.getSentFriendRequests(), target, 0)) return FriendshipStatus.SENT;
         if (containsRecursive(me.getPendingFriendRequests(), target, 0)) return FriendshipStatus.RECEIVED;
         return FriendshipStatus.NONE;
@@ -371,8 +336,6 @@ public class UserManager {
         return value == null ? "" : value.trim().toLowerCase();
     }
 
-
-    // ── Sistema VS por archivos binarios ────────────────────────────────────
 
     private File versusFile(String id) { return new File(VS_DIR, id + ".dat"); }
 
@@ -496,7 +459,6 @@ public class UserManager {
         return out;
     }
 
-    // ── Hash ─────────────────────────────────────────────────────────────────
 
     public static String hashPassword(String password) {
         try {
@@ -506,12 +468,12 @@ public class UserManager {
             for (byte b : hash) sb.append(String.format("%02x", b));
             return sb.toString();
         } catch (Exception e) {
-            // fallback inseguro, solo para desarrollo
+
             return Integer.toHexString(password.hashCode());
         }
     }
 
-    // ── Getter ────────────────────────────────────────────────────────────────
+
     public UserData getCurrentUser() { return currentUser; }
     public boolean  isLoggedIn()     { return currentUser != null; }
 }

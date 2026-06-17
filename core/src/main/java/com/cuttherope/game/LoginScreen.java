@@ -170,7 +170,7 @@ public class LoginScreen implements Screen {
     }
 
     private void check(String text, boolean valid, float x, float y) {
-        // Un solo cuadro por requisito. El texto queda siempre blanco.
+
         sr.begin(ShapeRenderer.ShapeType.Line);
         sr.setColor(Color.WHITE);
         sr.rect(x, y - 10, 12, 12);
