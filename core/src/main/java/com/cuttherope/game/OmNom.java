@@ -110,11 +110,20 @@ public class OmNom {
         }
     }
 
-    /** Verifica si el caramelo llegó a la boca. */
-    public boolean isCanyCaught(Candy candy) {
+    /** Verifica si el caramelo llegó a la boca.
+     *  Se usa un área un poco más grande porque el dulce puede caer rápido y
+     *  antes pasaba rozando a Om Nom sin activar la victoria.
+     */
+    public boolean isCandyCaught(Candy candy) {
         float dx = candy.position.x - x;
-        float dy = candy.position.y - y;
-        return Math.sqrt(dx * dx + dy * dy) < (radius + candy.radius);
+        float dy = candy.position.y - (y + radius * 0.15f);
+        float catchRadius = radius + candy.radius + 35f;
+        return Math.sqrt(dx * dx + dy * dy) < catchRadius;
+    }
+
+    /** Alias para compatibilidad con el nombre anterior. */
+    public boolean isCanyCaught(Candy candy) {
+        return isCandyCaught(candy);
     }
 
     private static final Texture[] omNomTextures = new Texture[5];

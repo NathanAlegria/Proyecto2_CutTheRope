@@ -13,6 +13,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
@@ -75,7 +76,7 @@ public class SettingsScreen implements Screen {
     @Override
     public void show() {
         sr = new ShapeRenderer();
-        fondoAjustes = AssetPaths.textureAnyOrNull(AssetPaths.FONDO_AJUSTES, "Imagenes/FondoA.png", "assets/Imagenes/FondoA.png", "FondoA", "FondoA.jpg", "fondoA.png", "fondoa.png");
+        fondoAjustes = AssetPaths.textureAnyOrNull(AssetPaths.FONDO_AJUSTES, "FondoAjustes.png", "FondoA.png", "Imagenes/FondoAjustes.png", "Imagenes/FondoA.png", "assets/FondoAjustes.png", "assets/FondoA.png", "assets/Imagenes/FondoAjustes.png", "assets/Imagenes/FondoA.png", "FondoAjustes.jpg", "FondoA.jpg", "fondoA.png", "fondoa.png");
     }
 
     @Override
@@ -90,6 +91,7 @@ public class SettingsScreen implements Screen {
         UserData ud = um.getCurrentUser();
 
         drawBg();
+        drawPanels();
         drawTitle();
         drawAudio(ud);
         drawPrefs(ud);
@@ -125,10 +127,29 @@ public class SettingsScreen implements Screen {
         sr.end();
     }
 
+    private void drawPanels() {
+        // Paneles rectangulares para ordenar mejor el contenido y evitar solapes visuales.
+        sr.begin(ShapeRenderer.ShapeType.Filled);
+        sr.setColor(new Color(0.06f, 0.04f, 0.16f, 0.62f));
+        sr.rect(20, 390, 760, 150);
+        sr.rect(20, 255, 760, 110);
+        sr.rect(20, 110, 760, 125);
+        sr.end();
+
+        sr.begin(ShapeRenderer.ShapeType.Line);
+        sr.setColor(new Color(0.46f, 0.28f, 0.82f, 0.95f));
+        sr.rect(20, 390, 760, 150);
+        sr.rect(20, 255, 760, 110);
+        sr.rect(20, 110, 760, 125);
+        sr.end();
+    }
+
     private void drawTitle() {
+        String title = MainGame.t("Ajustes");
+        GlyphLayout layout = new GlyphLayout(game.fontLarge, title);
         game.batch.begin();
         game.fontLarge.setColor(new Color(0.9f, 0.7f, 1f, 1f));
-        game.fontLarge.draw(game.batch, MainGame.t("AJUSTES"), 310, 665);
+        game.fontLarge.draw(game.batch, title, 400f - layout.width / 2f, 665);
         game.batch.end();
     }
 
@@ -248,7 +269,9 @@ public class SettingsScreen implements Screen {
 
             game.batch.begin();
             game.fontSmall.setColor(Color.WHITE);
-            game.fontSmall.draw(game.batch, "OmNom" + (i + 1), r.x + 28, r.y + 15);
+            String avatarLabel = "OmNom" + (i + 1);
+            GlyphLayout layout = new GlyphLayout(game.fontSmall, avatarLabel);
+            game.fontSmall.draw(game.batch, avatarLabel, r.x + r.width / 2f - layout.width / 2f, r.y + 18);
             game.batch.end();
         }
     }
@@ -324,9 +347,10 @@ public class SettingsScreen implements Screen {
         sr.rect(r.x, r.y, r.width, r.height);
         sr.end();
 
+        GlyphLayout layout = new GlyphLayout(game.font, text);
         game.batch.begin();
         game.font.setColor(Color.WHITE);
-        game.font.draw(game.batch, text, r.x + 14, r.y + r.height - 8);
+        game.font.draw(game.batch, text, r.x + r.width / 2f - layout.width / 2f, r.y + r.height / 2f + layout.height / 2f - 2f);
         game.batch.end();
     }
 
@@ -338,9 +362,15 @@ public class SettingsScreen implements Screen {
         sr.rect(r.x, r.y, r.width, r.height);
         sr.end();
 
+        sr.begin(ShapeRenderer.ShapeType.Line);
+        sr.setColor(new Color(1f, 1f, 1f, 0.18f));
+        sr.rect(r.x, r.y, r.width, r.height);
+        sr.end();
+
+        GlyphLayout layout = new GlyphLayout(game.fontSmall, text);
         game.batch.begin();
         game.fontSmall.setColor(Color.WHITE);
-        game.fontSmall.draw(game.batch, text, r.x + 6, r.y + r.height - 8);
+        game.fontSmall.draw(game.batch, text, r.x + r.width / 2f - layout.width / 2f, r.y + r.height / 2f + layout.height / 2f - 2f);
         game.batch.end();
     }
 
@@ -350,9 +380,15 @@ public class SettingsScreen implements Screen {
         sr.rect(r.x, r.y, r.width, r.height);
         sr.end();
 
+        sr.begin(ShapeRenderer.ShapeType.Line);
+        sr.setColor(new Color(0f, 0f, 0f, 0.55f));
+        sr.rect(r.x, r.y, r.width, r.height);
+        sr.end();
+
+        GlyphLayout layout = new GlyphLayout(game.fontSmall, text);
         game.batch.begin();
         game.fontSmall.setColor(Color.WHITE);
-        game.fontSmall.draw(game.batch, text, r.x + 8, r.y + r.height - 8);
+        game.fontSmall.draw(game.batch, text, r.x + r.width / 2f - layout.width / 2f, r.y + r.height / 2f + layout.height / 2f - 2f);
         game.batch.end();
     }
 

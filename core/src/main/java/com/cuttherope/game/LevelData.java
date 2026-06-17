@@ -11,10 +11,20 @@ public class LevelData {
     public final float[] anchorX, anchorY;
     public final float candyX, candyY, omNomX, omNomY;
     public final float[] starX, starY;
+    public final float[] spikeX, spikeY;
+    public final int[]   spikeDir; // 0=arriba, 1=derecha, 2=izquierda
     public final int lives;
 
     public LevelData(int levelIndex, String title, String hint, int timeLimit, Color ropeColor, Color bgColor1, Color bgColor2, float[] anchorX, float[] anchorY, float candyX, float candyY, float omNomX, float omNomY, float[] starX, float[] starY, int lives) {
-        this.levelIndex = levelIndex; this.title = title; this.hint = hint; this.timeLimit = timeLimit; this.ropeColor = ropeColor; this.bgColor1 = bgColor1; this.bgColor2 = bgColor2; this.anchorX = anchorX; this.anchorY = anchorY; this.candyX = candyX; this.candyY = candyY; this.omNomX = omNomX; this.omNomY = omNomY; this.starX = starX; this.starY = starY; this.lives = lives;
+        this(levelIndex, title, hint, timeLimit, ropeColor, bgColor1, bgColor2, anchorX, anchorY, candyX, candyY, omNomX, omNomY, starX, starY, new float[0], new float[0], new int[0], lives);
+    }
+
+    public LevelData(int levelIndex, String title, String hint, int timeLimit, Color ropeColor, Color bgColor1, Color bgColor2, float[] anchorX, float[] anchorY, float candyX, float candyY, float omNomX, float omNomY, float[] starX, float[] starY, float[] spikeX, float[] spikeY, int lives) {
+        this(levelIndex, title, hint, timeLimit, ropeColor, bgColor1, bgColor2, anchorX, anchorY, candyX, candyY, omNomX, omNomY, starX, starY, spikeX, spikeY, new int[spikeX.length], lives);
+    }
+
+    public LevelData(int levelIndex, String title, String hint, int timeLimit, Color ropeColor, Color bgColor1, Color bgColor2, float[] anchorX, float[] anchorY, float candyX, float candyY, float omNomX, float omNomY, float[] starX, float[] starY, float[] spikeX, float[] spikeY, int[] spikeDir, int lives) {
+        this.levelIndex = levelIndex; this.title = title; this.hint = hint; this.timeLimit = timeLimit; this.ropeColor = ropeColor; this.bgColor1 = bgColor1; this.bgColor2 = bgColor2; this.anchorX = anchorX; this.anchorY = anchorY; this.candyX = candyX; this.candyY = candyY; this.omNomX = omNomX; this.omNomY = omNomY; this.starX = starX; this.starY = starY; this.spikeX = spikeX; this.spikeY = spikeY; this.spikeDir = spikeDir; this.lives = lives;
     }
 
     public static LevelData[] createAll() { return new LevelData[]{ level1(), level2(), level3(), level4(), level5() }; }
@@ -41,73 +51,72 @@ public class LevelData {
     }
 
     // ── NIVEL 2 ──────────────────────────────────────────────────────────────
-    // 2 anclas: una derecha-arriba (1) y una izquierda-arriba (2).
-    // Cortar la derecha primero -> dulce balancea izquierda recogiendo estrella izq.
-    // Cortar la segunda -> cae recogiendo estrellas restantes y llega a Om Nom (derecha abajo).
+    // Basado en el mockup/PDF: el dulce empieza a la derecha con 3 sogas.
+    // Primero se balancea hacia las estrellas de la izquierda y luego cae hacia
+    // Om Nom, que queda abajo a la derecha como en la imagen.
     private static LevelData level2() {
-        return new LevelData(1, "Nivel 1-2",
-            "Corta primero la cuerda derecha (1), luego la izquierda (2). Usa la fisica para recoger las estrellas y llegar a Om Nom.",
+        return new LevelData(1, "Segundo Nivel",
+            "Usa el balanceo del mockup: corta primero la soga derecha, toma las estrellas de la izquierda y luego deja caer el dulce hacia Om Nom.",
             0, ROPE, BG1, BG2,
-            new float[]{580, 290},
-            new float[]{590, 560},
-            480, 470,
-            570, 80,
-            new float[]{240, 200, 300},
-            new float[]{370, 270, 160},
+            new float[]{360, 585, 365},
+            new float[]{610, 610, 365},
+            515, 455,
+            550, 85,
+            new float[]{380, 330, 455},
+            new float[]{375, 280, 165},
             3);
     }
 
-    // ── NIVEL 3 ──────────────────────────────────────────────────────────────
-    // 6 cuerdas radiales (patron de arana) desde el candy al centro.
-    // Cortar primero X azul (izq-arriba y der-arriba = paso 1),
-    // luego X roja (der-media = paso 2).
-    // Estrellas: der-media (azul), izq-abajo (verde), der-abajo (rojo).
-    // Om Nom: abajo derecha.
     private static LevelData level3() {
-        return new LevelData(2, "Nivel 1-7",
-            "Corta primero las cuerdas con X azul (1), luego las rojas (2). Recoge las estrellas y lleva el dulce a Om Nom.",
+        return new LevelData(2, "Nivel 3",
+            "Usa el balanceo del dulce. Corta las cuerdas correctas para conseguir las estrellas.",
             0, ROPE, BG1, BG2,
-            new float[]{240, 400, 560, 220, 240, 395},
-            new float[]{620, 640, 615, 400, 300, 280},
-            400, 490,
-            530, 80,
-            new float[]{530, 255, 490},
-            new float[]{390, 200, 185},
+            new float[]{400, 220, 580, 400},
+            new float[]{650, 520, 520, 300},
+            400, 470,
+            600, 100,
+            new float[]{520, 250, 420},
+            new float[]{350, 250, 160},
             3);
     }
 
-    // ── NIVEL 4 ──────────────────────────────────────────────────────────────
-    // 4 cuerdas. Hay puas en zona central-vertical (peligro).
-    // Cortar cuerdas en orden: verde-arriba (1), morada-izq (2), soltar (3).
-    // El dulce debe esquivar las puas y recoger estrellas laterales.
-    // Om Nom: abajo centro-der.
     private static LevelData level4() {
-        return new LevelData(3, "Nivel 1-16",
-            "Aleja el dulce de las puas! Si toca una pua se rompe el dulce y pierdes el nivel.",
+        return new LevelData(3, "Cuarto Nivel",
+            "Nivel 4 ajustado al video: las estrellas siguen la caída real del dulce para recoger las 3 en una sola partida.",
             0, ROPE, BG1, BG2,
-            new float[]{260, 430, 310, 430},
-            new float[]{625, 625, 450, 355},
-            265, 510,
-            490, 75,
-            new float[]{510, 300, 480},
-            new float[]{430, 310, 235},
+            // Se mantiene la misma estructura del nivel.
+            new float[]{185, 360, 390, 390},
+            new float[]{620, 620, 500, 355},
+            200, 500,
+            400, 75,
+            // Estrellas movidas al camino que sigue el dulce en el video:
+            // entrada hacia el centro, bajada entre las púas y caída final hacia Om Nom.
+            new float[]{260, 365, 395},
+            new float[]{420, 305, 175},
+            // Se conservan las dos filas de púas.
+            new float[]{315, 350, 435, 470, 315, 350, 435, 470},
+            new float[]{350, 350, 350, 350, 205, 205, 205, 205},
+            new int[]{0, 0, 0, 0, 0, 0, 0, 0},
+            3);
+    }
+    private static LevelData level5() {
+        return new LevelData(4, "Quinto Nivel",
+            "Nivel 5 basado en la nueva referencia: Om Nom abajo, sin burbuja, estrellas en línea recta y una ruta posible para recogerlas en una sola partida.",
+            0, ROPE, BG1, BG2,
+            // Seis sogas como en la imagen: tres a la izquierda y tres a la derecha.
+            new float[]{110, 95, 110, 690, 705, 690},
+            new float[]{560, 355, 145, 560, 355, 145},
+            400, 390,
+            400, 75,
+            // Tres estrellas en línea recta vertical para que puedan recogerse en una sola caída.
+            new float[]{400, 400, 400},
+            new float[]{295, 205, 150},
+            // Dos columnas verticales de púas, dejando libre el centro.
+            new float[]{260, 260, 260, 260, 260, 260, 260, 540, 540, 540, 540, 540, 540, 540},
+            new float[]{555, 505, 455, 405, 355, 305, 255, 555, 505, 455, 405, 355, 305, 255},
+            new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
             3);
     }
 
-    // ── NIVEL 5 ──────────────────────────────────────────────────────────────
-    // 4 cuerdas. Hay un bumper (elemento de rebote).
-    // Orden: cortar cuerda izq-arriba (1), desactivar bumper der-arriba (2),
-    // candy rebota hacia estrella (3), soltar ultima cuerda (4) -> Om Nom abajo.
-    private static LevelData level5() {
-        return new LevelData(4, "Nivel 1-18",
-            "Corta en orden: cuerda izquierda (1), desactiva el bumper (2 y 3) y suelta la ultima cuerda (4) para llegar a Om Nom.",
-            0, ROPE, BG1, BG2,
-            new float[]{260, 530, 470, 220},
-            new float[]{640, 615, 430, 300},
-            390, 510,
-            530, 75,
-            new float[]{490, 440, 330},
-            new float[]{435, 295, 145},
-            3);
-    }
+
 }

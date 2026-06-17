@@ -13,7 +13,7 @@ public final class AssetPaths {
     public static final String FONDO = "Fondo.png";
     public static final String FONDO_MENU = "FondoMenu.png";
     public static final String FONDO_VS = "FondoVS.png";
-    public static final String FONDO_AJUSTES = "FondoA.png";
+    public static final String FONDO_AJUSTES = "FondoAjustes.png";
     public static final String CANDY = "Candy.png";
 
     public static final String OMNOM1 = "OmNom1.png";
@@ -62,17 +62,32 @@ public final class AssetPaths {
     public static FileHandle find(String fileName) {
         String[] names = variants(fileName);
         String[] roots = {
+            "",
             "Imagenes/",
             "imagenes/",
+            "assets/",
             "assets/Imagenes/",
             "assets/imagenes/",
+            "../assets/",
+            "../assets/Imagenes/",
+            "../assets/imagenes/",
+            "../../assets/",
+            "../../assets/Imagenes/",
+            "../../assets/imagenes/",
+            "core/assets/",
             "core/assets/Imagenes/",
             "core/assets/imagenes/",
+            "../core/assets/",
+            "../core/assets/Imagenes/",
+            "../core/assets/imagenes/",
+            "lwjgl3/assets/",
             "lwjgl3/assets/Imagenes/",
             "lwjgl3/assets/imagenes/",
+            "../lwjgl3/assets/",
+            "../lwjgl3/assets/Imagenes/",
+            "../lwjgl3/assets/imagenes/",
             "src/main/java/Imagenes/",
-            "src/main/java/imagenes/",
-            ""
+            "src/main/java/imagenes/"
         };
 
         for (String root : roots) {

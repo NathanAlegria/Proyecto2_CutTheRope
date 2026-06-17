@@ -121,6 +121,16 @@ public class MainGame extends Game {
             translations.put("Activado",        "Enabled");
             translations.put("Desactivado",     "Disabled");
             translations.put("Cargando",        "Loading");
+            translations.put("Mapa de niveles", "Level map");
+            translations.put("Selecciona un nivel", "Select a level");
+            translations.put("VS", "VS");
+            translations.put("Salir", "Exit");
+            translations.put("Segundo Nivel", "Second Level");
+            translations.put("Cuarto Nivel", "Fourth Level");
+            translations.put("Quinto Nivel", "Fifth Level");
+            translations.put("Usa el balanceo del mockup: corta primero la soga derecha, toma las estrellas de la izquierda y luego deja caer el dulce hacia Om Nom.", "Use the mockup swing: cut the right rope first, collect the stars on the left and then let the candy fall toward Om Nom.");
+            translations.put("Nivel 4 revisado: mantiene el diseño de referencia, pero ahora el camino del dulce y de las estrellas es más claro y posible.", "Level 4 revised: it keeps the reference design, but now the candy and star path is clearer and possible.");
+            translations.put("Nivel 5 basado en la nueva referencia: Om Nom abajo, sin burbuja, estrellas en línea recta y una ruta posible para recogerlas en una sola partida.", "Level 5 based on the new reference: Om Nom below, no bubble, stars in a straight line, and a possible route to collect them in one run.");
 
             // Login / registro / validaciones
             translations.put("Las contraseñas no coinciden.", "Passwords do not match.");

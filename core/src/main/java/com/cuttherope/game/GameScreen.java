@@ -46,6 +46,14 @@ public class GameScreen extends Juego implements Screen {
     private OmNom omNom;
     private List<Rope> ropes;
     private List<Star> stars;
+    private List<Spike> spikes;
+
+    // ── Burbuja del nivel 5 ─────────────────────────────────────────────────
+    private boolean bubbleEnabled = false;
+    private float bubbleX = 0f;
+    private float bubbleY = 0f;
+    private float bubbleRadius = 0f;
+    private float bubbleLift = 920f;
 
     // ── Estado de corte ───────────────────────────────────────────────────────
     private boolean cutting = false;
@@ -118,6 +126,20 @@ public class GameScreen extends Juego implements Screen {
         for (int i = 0; i < d.starX.length; i++) {
             stars.add(new Star(d.starX[i], d.starY[i]));
         }
+
+        // Crear puas
+        spikes = new ArrayList<>();
+        for (int i = 0; i < d.spikeX.length; i++) {
+            int dir = (d.spikeDir != null && i < d.spikeDir.length) ? d.spikeDir[i] : 0;
+            spikes.add(new Spike(d.spikeX[i], d.spikeY[i], dir));
+        }
+
+        // La burbuja quedó desactivada en la versión actual del nivel 5.
+        bubbleEnabled = false;
+        bubbleX = 390f;
+        bubbleY = 95f;
+        bubbleRadius = 52f;
+        bubbleLift = 920f;
 
         // Reiniciar estado
         starsCollected = 0;
@@ -201,6 +223,10 @@ public class GameScreen extends Juego implements Screen {
         // se quedaba pegado en el aire o caía sin momentum.
         candy.update(dt);
 
+        // En el nivel 5, la burbuja empuja el dulce hacia arriba sin quitar
+        // el efecto de las cuerdas.
+        applyBubblePhysics(dt);
+
         // Después de aplicar gravedad, las cuerdas activas limitan la distancia
         // al ancla. Eso conserva el componente tangencial y produce balanceo.
         if (activeRopes > 0) {
@@ -225,6 +251,14 @@ public class GameScreen extends Juego implements Screen {
             }
         }
 
+        // Verificar colision con puas
+        for (Spike sp : spikes) {
+            if (sp.checkCollision(candy)) {
+                candy.fallen = true;
+                break;
+            }
+        }
+
         // Actualizar Om Nom
         omNom.update(delta);
 
@@ -233,6 +267,7 @@ public class GameScreen extends Juego implements Screen {
             levelComplete = true;
             state = GameState.WIN;
 
+            candy.collected = true;
             omNom.eat();
 
             game.audioManager.playEat();
@@ -266,7 +301,7 @@ public class GameScreen extends Juego implements Screen {
 
     @Override
     public boolean checkWinCondition() {
-        return omNom.isCanyCaught(candy);
+        return omNom.isCandyCaught(candy);
     }
 
     @Override
@@ -287,6 +322,10 @@ public class GameScreen extends Juego implements Screen {
 
         if (stars != null) {
             stars.clear();
+        }
+
+        if (spikes != null) {
+            spikes.clear();
         }
 
         if (timerThread != null) {
@@ -321,8 +360,14 @@ public class GameScreen extends Juego implements Screen {
         // Entidades
         sr.begin(ShapeRenderer.ShapeType.Filled);
 
+        drawBubble();
+
         for (Star s : stars) {
             s.draw(sr);
+        }
+
+        for (Spike sp : spikes) {
+            sp.draw(sr);
         }
 
         for (Rope r : ropes) {
@@ -469,7 +514,7 @@ public class GameScreen extends Juego implements Screen {
 
         game.font.draw(
             game.batch,
-            MainGame.t("Recogidas:") + " " + starsCollected + "/" + stars.size()
+            MainGame.t("Recogidas:") + " " + starsCollected + "/" + stars.size() + "  (opcionales)"
                 + "   " + MainGame.t("Tiempo:") + " " + elapsed / 1000 + "s"
                 + "   " + MainGame.t("Puntos:") + " " + score,
             80,
@@ -513,12 +558,8 @@ public class GameScreen extends Juego implements Screen {
         game.batch.begin();
 
         game.fontLarge.setColor(new Color(1f, 0.3f, 0.3f, 1f));
-
         String msg = lives <= 0 ? MainGame.t("SIN VIDAS") : MainGame.t("¡FALLASTE!");
         game.fontLarge.draw(game.batch, msg, 250, 420);
-
-        game.font.setColor(new Color(0.8f, 0.8f, 0.8f, 1f));
-        game.font.draw(game.batch, MainGame.t(currentLevelData.hint), 120, 370);
 
         game.batch.end();
 
@@ -711,6 +752,43 @@ public class GameScreen extends Juego implements Screen {
         }
 
         return sb.toString();
+    }
+
+    private void applyBubblePhysics(float dt) {
+        if (!bubbleEnabled || candy == null || candy.collected || candy.fallen) {
+            return;
+        }
+
+        float dx = candy.position.x - bubbleX;
+        float dy = candy.position.y - bubbleY;
+        float insideRadius = bubbleRadius + candy.radius * 0.35f;
+
+        if (dx * dx + dy * dy <= insideRadius * insideRadius) {
+            // Empuje vertical principal.
+            candy.velocity.y += bubbleLift * dt;
+
+            // Ligero centrado horizontal para que el dulce permanezca dentro de la burbuja,
+            // pero sigue respondiendo a las cuerdas.
+            candy.velocity.x += (bubbleX - candy.position.x) * 1.35f * dt;
+
+            // Limitar velocidad para que no salga disparado.
+            if (candy.velocity.y > 380f) {
+                candy.velocity.y = 380f;
+            }
+        }
+    }
+
+    private void drawBubble() {
+        if (!bubbleEnabled) {
+            return;
+        }
+
+        sr.setColor(new Color(0.75f, 0.92f, 1f, 0.18f));
+        sr.circle(bubbleX, bubbleY, bubbleRadius);
+        sr.setColor(new Color(0.95f, 1f, 1f, 0.32f));
+        sr.circle(bubbleX, bubbleY, bubbleRadius - 5f);
+        sr.setColor(new Color(1f, 1f, 1f, 0.42f));
+        sr.circle(bubbleX - bubbleRadius * 0.22f, bubbleY + bubbleRadius * 0.25f, bubbleRadius * 0.16f);
     }
 
     private void drawWinStars(int earned) {

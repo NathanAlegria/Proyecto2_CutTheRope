@@ -77,9 +77,9 @@ public class MainMenuScreen implements Screen {
         game.batch.begin();
         game.fontLarge.getData().setScale(1.5f);
         game.fontLarge.setColor(new Color(1f, 0.78f, 0.08f, 1f));
-        game.fontLarge.draw(game.batch, "Mapa de niveles", 440, 625);
+        game.fontLarge.draw(game.batch, MainGame.t("Mapa de niveles"), 440, 625);
         game.font.setColor(Color.WHITE);
-        game.font.draw(game.batch, "Selecciona un nivel", 480, 590);
+        game.font.draw(game.batch, MainGame.t("Selecciona un nivel"), 480, 590);
         game.batch.end();
     }
 
@@ -123,11 +123,11 @@ public class MainMenuScreen implements Screen {
     }
 
     private void drawBottom() {
-        btnCeleste(btnStats,    "Estadísticas");
-        btnCeleste(btnSettings, "Ajustes");
-        btnCeleste(btnRanking,  "Ranking");
-        btnCeleste(btnVersus,   "VS");
-        btnCeleste(btnLogout,   "Salir");
+        btnCeleste(btnStats,    MainGame.t("Estadísticas"));
+        btnCeleste(btnSettings, MainGame.t("Ajustes"));
+        btnCeleste(btnRanking,  MainGame.t("Ranking"));
+        btnCeleste(btnVersus,   MainGame.t("VS"));
+        btnCeleste(btnLogout,   MainGame.t("Salir"));
     }
 
     private void btnCeleste(Rectangle r, String text) {

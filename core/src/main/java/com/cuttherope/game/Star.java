@@ -76,6 +76,6 @@ public class Star {
         float dx = candy.position.x - x;
         float dy = candy.position.y - y;
         float dist = (float) Math.sqrt(dx * dx + dy * dy);
-        return dist < (radius + candy.radius * 0.8f);
+        return dist < (radius + candy.radius * 1.05f + 4f);
     }
 }
