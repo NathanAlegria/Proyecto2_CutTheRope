@@ -162,6 +162,17 @@ public class MainGame extends Game {
             translations.put("Primero acepta o envía una solicitud de amistad.", "First accept or send a friend request.");
             translations.put("Esperando que el amigo acepte la partida.", "Waiting for your friend to accept the match.");
             translations.put("Aún falta que ambos presionen Listo.", "Both players still need to press Ready.");
+            translations.put("El retado acepta y marca Listo. El retador presiona Jugar para iniciar ambos.", "The challenged player accepts and marks Ready. The challenger presses Play to start both players.");
+            translations.put("Retador OK", "Challenger OK");
+            translations.put("Solicitud recibida", "Request received");
+            translations.put("Solicitud enviada", "Request sent");
+            translations.put("Esperando Listo del retado", "Waiting for challenged player Ready");
+            translations.put("Aceptada: presiona Listo", "Accepted: press Ready");
+            translations.put("Listo: presiona Jugar", "Ready: press Play");
+            translations.put("Esperando inicio del retador", "Waiting for challenger start");
+            translations.put("Iniciando partida VS", "Starting VS match");
+            translations.put("Espera que el jugador retado marque Listo.", "Wait for the challenged player to mark Ready.");
+            translations.put("Solo el retador puede presionar Jugar cuando el retado esté listo.", "Only the challenger can press Play when the challenged player is ready.");
             translations.put("Salir", "Exit");
             translations.put("Segundo Nivel", "Second Level");
             translations.put("Cuarto Nivel", "Fourth Level");

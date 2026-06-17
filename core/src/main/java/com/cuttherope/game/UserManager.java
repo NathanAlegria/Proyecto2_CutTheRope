@@ -31,6 +31,7 @@ public class UserManager {
     private static final String VS_DIR = BASE_DIR + "vs/";
     private String sessionToken;
     private static final long ONLINE_LOCK_TIMEOUT_MS = 45L * 1000L;
+    private static final long VS_REQUEST_TIMEOUT_MS = 60L * 1000L;
 
     private UserData currentUser;               // usuario en sesión
     private Map<String, Integer> rankingCache;  // username → score
@@ -393,9 +394,11 @@ public class UserManager {
         if (m == null) return "La solicitud VS no existe.";
         if (!m.opponent.equalsIgnoreCase(currentUser.getUsername())) return "Solo el amigo retado puede aceptar.";
         m.state = VersusMatch.State.ACCEPTED;
+        m.requesterReady = true;
+        m.opponentReady = false;
         m.updatedAt = new Date();
         saveVersusMatch(m);
-        return "Partida VS aceptada. Ahora ambos deben presionar Listo.";
+        return "Partida VS aceptada. Presiona Listo para habilitar Jugar al retador.";
     }
 
     public String setVersusReady(String matchId) {
@@ -404,9 +407,16 @@ public class UserManager {
         if (m == null) return "La partida VS no existe.";
         if (!m.includes(currentUser.getUsername())) return "No perteneces a esta partida VS.";
         if (m.state == VersusMatch.State.REQUESTED) return "Primero el amigo debe aceptar la solicitud VS.";
-        m.setReady(currentUser.getUsername());
+        if (m.opponent.equalsIgnoreCase(currentUser.getUsername())) {
+            m.requesterReady = true;
+            m.opponentReady = true;
+            m.state = VersusMatch.State.BOTH_READY;
+            m.updatedAt = new Date();
+        } else {
+            m.setReady(currentUser.getUsername());
+        }
         saveVersusMatch(m);
-        return m.hasBothReady() ? "Ambos listos. Inicia desde nivel 1." : "Listo marcado. Esperando al otro jugador.";
+        return m.hasBothReady() ? "Listo. El retador ya puede presionar Jugar." : "Listo marcado. Esperando al otro jugador.";
     }
 
     public void recordVersusLevel(String matchId, String username, int level, int stars, long timeMs) {
@@ -414,7 +424,7 @@ public class UserManager {
         if (m == null) return;
         m.recordLevel(clean(username), level, stars, timeMs);
         saveVersusMatch(m);
-        if (m.state == VersusMatch.State.FINISHED) updateVersusStats(m);
+        if (m.state == VersusMatch.State.FINISHED && !m.statsUpdated) updateVersusStats(m);
     }
 
     private void updateVersusStats(VersusMatch m) {
@@ -424,7 +434,31 @@ public class UserManager {
         long winnerTime = "Empate".equalsIgnoreCase(m.winner) ? Math.min(m.totalTime(m.requester), m.totalTime(m.opponent)) : m.totalTime(m.winner);
         if (a != null) { a.recordVersus(m.opponent, m.winner, m.totalStars(m.requester), m.totalTime(m.requester), m.reason, winnerStars, winnerTime, 15); saveUser(a); }
         if (b != null) { b.recordVersus(m.requester, m.winner, m.totalStars(m.opponent), m.totalTime(m.opponent), m.reason, winnerStars, winnerTime, 15); saveUser(b); }
-        if (currentUser != null) { if (currentUser.getUsername().equals(m.requester)) currentUser = a; if (currentUser.getUsername().equals(m.opponent)) currentUser = b; }
+        m.statsUpdated = true;
+        saveVersusMatch(m);
+        if (currentUser != null) { if (currentUser.getUsername().equalsIgnoreCase(m.requester)) currentUser = a; if (currentUser.getUsername().equalsIgnoreCase(m.opponent)) currentUser = b; }
+    }
+
+    public String startVersusMatch(String matchId) {
+        if (currentUser == null) return "No hay jugador activo.";
+        VersusMatch m = loadVersusMatch(matchId);
+        if (m == null) return "La partida VS no existe.";
+        if (!m.requester.equalsIgnoreCase(currentUser.getUsername())) return "Solo el jugador que envió el reto puede iniciar.";
+        if (!m.hasBothReady()) return "La persona retada todavía no está lista.";
+        m.state = VersusMatch.State.IN_PROGRESS;
+        m.updatedAt = new Date();
+        saveVersusMatch(m);
+        return "Partida VS iniciada.";
+    }
+
+    private boolean deleteExpiredVersusIfNeeded(VersusMatch m) {
+        if (m == null) return true;
+        if (m.isExpiredRequest(System.currentTimeMillis(), VS_REQUEST_TIMEOUT_MS)) {
+            File f = versusFile(m.id);
+            if (f.exists()) f.delete();
+            return true;
+        }
+        return false;
     }
 
     public void saveVersusMatch(VersusMatch m) {
@@ -455,6 +489,7 @@ public class UserManager {
         for (File f : files) {
             String id = f.getName().substring(0, f.getName().length() - 4);
             VersusMatch m = loadVersusMatch(id);
+            if (deleteExpiredVersusIfNeeded(m)) continue;
             if (m != null && m.includes(clean(username))) out.add(m);
         }
         out.sort((a,b) -> b.updatedAt.compareTo(a.updatedAt));

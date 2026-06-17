@@ -15,6 +15,7 @@ public class VersusMatch implements Serializable {
     public State state;
     public boolean requesterReady;
     public boolean opponentReady;
+    public boolean statsUpdated;
     public int[] requesterStars = new int[5];
     public int[] opponentStars = new int[5];
     public long[] requesterTime = new long[5];
@@ -45,6 +46,10 @@ public class VersusMatch implements Serializable {
 
     public boolean hasBothReady() { return requesterReady && opponentReady; }
 
+    public boolean isExpiredRequest(long nowMs, long timeoutMs) {
+        return state == State.REQUESTED && createdAt != null && (nowMs - createdAt.getTime()) > timeoutMs;
+    }
+
     public boolean isCompleteFor(String username) {
         long[] t = requester.equalsIgnoreCase(username) ? requesterTime : opponentTime;
         for (int i = 0; i < 5; i++) if (t[i] <= 0) return false;
@@ -56,7 +61,7 @@ public class VersusMatch implements Serializable {
     public void setReady(String username) {
         if (requester.equalsIgnoreCase(username)) requesterReady = true;
         if (opponent.equalsIgnoreCase(username)) opponentReady = true;
-        if (state == State.ACCEPTED && hasBothReady()) state = State.BOTH_READY;
+        if ((state == State.ACCEPTED || state == State.REQUESTED) && hasBothReady()) state = State.BOTH_READY;
         updatedAt = new Date();
     }
 

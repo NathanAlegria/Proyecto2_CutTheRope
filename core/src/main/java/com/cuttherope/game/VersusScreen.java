@@ -24,6 +24,10 @@ public class VersusScreen extends SocialScreenBase {
     private int tab = 0;
     private String message = "";
     private Texture fondoVs;
+    private float reloadTimer = 0f;
+    private boolean autoStartingVs = false;
+    private String pendingVsStartId = null;
+    private float pendingVsStartTimer = 0f;
 
     public VersusScreen(MainGame game) { super(game); }
 
@@ -49,6 +53,23 @@ public class VersusScreen extends SocialScreenBase {
         sr.setProjectionMatrix(game.camera.combined);
         Gdx.gl.glClearColor(0.10f, 0.045f, 0.015f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        reloadTimer += delta;
+        if (reloadTimer >= 0.5f) {
+            reloadTimer = 0f;
+            reloadLists();
+            autoStartIfMatchStarted();
+        }
+
+        if (pendingVsStartId != null) {
+            pendingVsStartTimer -= delta;
+            if (pendingVsStartTimer <= 0f) {
+                String id = pendingVsStartId;
+                pendingVsStartId = null;
+                startVersusGameSafely(id);
+                return;
+            }
+        }
 
         drawVsBackground();
         drawHeader();
@@ -150,7 +171,7 @@ public class VersusScreen extends SocialScreenBase {
 
         game.batch.begin();
         game.font.setColor(new Color(1f, 0.86f, 0.05f, 1f)); game.font.draw(game.batch, MainGame.t("Partidas VS"), 40, 315);
-        game.fontSmall.setColor(new Color(0.84f, 0.68f, 0.32f, 1f)); game.fontSmall.draw(game.batch, MainGame.t("Aceptar / Listo / Jugar cuando ambos estén listos"), 40, 296);
+        game.fontSmall.setColor(new Color(0.84f, 0.68f, 0.32f, 1f)); game.fontSmall.draw(game.batch, MainGame.t("El retado acepta y marca Listo. El retador presiona Jugar para iniciar ambos."), 40, 296);
         game.batch.end();
 
         int matchRow = 0;
@@ -161,17 +182,73 @@ public class VersusScreen extends SocialScreenBase {
             Rectangle b = new Rectangle(625, y - 28, 95, 34);
             rowButtons.add(a); secondButtons.add(b);
             String other = m.otherPlayer(current.getUsername());
-            String status = m.state.name() + " | " + MainGame.t("Tú:") + " " + (m.isReady(current.getUsername()) ? MainGame.t("Listo") : MainGame.t("No listo"));
+            String status = buildMatchStatus(m, current.getUsername());
             drawMatchRow(y, matchRow, "VS " + other, status);
             String txtA;
             if (m.state == VersusMatch.State.REQUESTED && m.opponent.equalsIgnoreCase(current.getUsername())) txtA = MainGame.t("Aceptar");
             else if (m.state == VersusMatch.State.REQUESTED) txtA = MainGame.t("Enviada");
+            else if (m.requester.equalsIgnoreCase(current.getUsername())) txtA = MainGame.t("Retador OK");
             else txtA = m.isReady(current.getUsername()) ? MainGame.t("Listo OK") : MainGame.t("Listo");
             drawButton(a, txtA, new Color(0.22f, 0.12f, 0.08f, 1f), 0);
-            drawButton(b, m.hasBothReady() ? MainGame.t("Jugar") : MainGame.t("Espera"), m.hasBothReady() ? new Color(0.12f, 0.35f, 0.12f, 1f) : new Color(0.13f, 0.09f, 0.07f, 1f), m.hasBothReady() ? 2 : 0);
+            boolean canStart = m.hasBothReady() && m.requester.equalsIgnoreCase(current.getUsername());
+            drawButton(b, canStart ? MainGame.t("Jugar") : MainGame.t("Espera"), canStart ? new Color(0.12f, 0.35f, 0.12f, 1f) : new Color(0.13f, 0.09f, 0.07f, 1f), canStart ? 2 : 0);
             matchRow++;
         }
         if (friends.isEmpty() && matches.isEmpty()) drawEmpty(MainGame.t("Primero acepta o envía una solicitud de amistad."));
+    }
+
+    private String buildMatchStatus(VersusMatch m, String username) {
+        if (m.state == VersusMatch.State.REQUESTED) {
+            return m.opponent.equalsIgnoreCase(username) ? MainGame.t("Solicitud recibida") : MainGame.t("Solicitud enviada");
+        }
+        if (m.state == VersusMatch.State.ACCEPTED) {
+            return m.requester.equalsIgnoreCase(username) ? MainGame.t("Esperando Listo del retado") : MainGame.t("Aceptada: presiona Listo");
+        }
+        if (m.state == VersusMatch.State.BOTH_READY) {
+            return m.requester.equalsIgnoreCase(username) ? MainGame.t("Listo: presiona Jugar") : MainGame.t("Esperando inicio del retador");
+        }
+        if (m.state == VersusMatch.State.IN_PROGRESS) return MainGame.t("Iniciando partida VS");
+        return m.state.name();
+    }
+
+    private void autoStartIfMatchStarted() {
+        if (autoStartingVs || pendingVsStartId != null) return;
+        UserData current = um.getCurrentUser();
+        if (current == null) return;
+        for (VersusMatch m : matches) {
+            if (m != null && m.state == VersusMatch.State.IN_PROGRESS && m.includes(current.getUsername())) {
+                // La cuenta que aceptó entra automáticamente. Se deja una pausa mínima
+                // para no forzar dos cambios de pantalla OpenGL exactamente en el mismo instante
+                // cuando se prueban dos instancias en una misma computadora.
+                scheduleVersusStart(m.id, 0.65f);
+                return;
+            }
+        }
+    }
+
+    private void scheduleVersusStart(String matchId, float delaySeconds) {
+        if (matchId == null || matchId.trim().isEmpty()) return;
+        if (autoStartingVs || pendingVsStartId != null) return;
+        autoStartingVs = true;
+        pendingVsStartId = matchId;
+        pendingVsStartTimer = Math.max(0.05f, delaySeconds);
+        message = MainGame.t("Iniciando partida VS");
+    }
+
+    private void startVersusGameSafely(final String matchId) {
+        Gdx.app.postRunnable(new Runnable() {
+            @Override public void run() {
+                try {
+                    VersusModeContext.start(matchId);
+                    game.setScreen(new GameScreen(game, 0));
+                } catch (Throwable t) {
+                    autoStartingVs = false;
+                    pendingVsStartId = null;
+                    message = "No se pudo iniciar VS: " + t.getMessage();
+                    t.printStackTrace();
+                }
+            }
+        });
     }
 
     private void drawPlayerRow(float y, int row, String username, String name, String status, boolean friend) {
@@ -262,16 +339,16 @@ public class VersusScreen extends SocialScreenBase {
             if (rowButtons.get(index).contains(x, y)) {
                 if (m.state == VersusMatch.State.REQUESTED && m.opponent.equalsIgnoreCase(current.getUsername())) message = um.acceptVersusRequest(m.id);
                 else if (m.state == VersusMatch.State.REQUESTED) message = MainGame.t("Esperando que el amigo acepte la partida.");
+                else if (m.requester.equalsIgnoreCase(current.getUsername())) message = MainGame.t("Espera que el jugador retado marque Listo.");
                 else message = um.setVersusReady(m.id);
                 reloadLists(); return;
             }
             if (secondButtons.get(index).contains(x, y)) {
                 VersusMatch fresh = um.loadVersusMatch(m.id);
-                if (fresh != null && fresh.hasBothReady()) {
-                    VersusModeContext.start(fresh.id);
-                    game.setScreen(new GameScreen(game, 0));
-                    dispose();
-                } else message = MainGame.t("Aún falta que ambos presionen Listo.");
+                if (fresh != null && fresh.hasBothReady() && fresh.requester.equalsIgnoreCase(current.getUsername())) {
+                    message = um.startVersusMatch(fresh.id);
+                    scheduleVersusStart(fresh.id, 0.20f);
+                } else message = MainGame.t("Solo el retador puede presionar Jugar cuando el retado esté listo.");
                 reloadLists(); return;
             }
             index++;

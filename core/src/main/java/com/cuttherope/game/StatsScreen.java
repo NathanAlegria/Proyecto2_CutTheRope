@@ -16,7 +16,7 @@ import java.util.List;
 public class StatsScreen implements Screen {
 
     private final MainGame game;
-    private final UserData ud;
+    private UserData ud;
     private ShapeRenderer sr;
     private Texture fondo;
 
@@ -45,6 +45,11 @@ public class StatsScreen implements Screen {
 
     @Override
     public void show() {
+        UserData current = UserManager.getInstance().getCurrentUser();
+        if (current != null) {
+            UserData fresh = UserManager.getInstance().loadUser(current.getUsername());
+            if (fresh != null) ud = fresh;
+        }
         sr = new ShapeRenderer();
         fondo = AssetPaths.textureAnyOrNull("FondoStat", "FondoStat.png", "FondoStat.jpeg", "FondoStat.jpg", "Imagenes/FondoStat", "Imagenes/FondoStat.png", "Imagenes/FondoStat.jpeg", "Imagenes/FondoStat.jpg", "assets/FondoStat", "assets/Imagenes/FondoStat", "assets/Imagenes/FondoStat.png", "assets/Imagenes/FondoStat.jpeg", AssetPaths.FONDO_MENU, AssetPaths.FONDO);
         if (game.audioManager != null) game.audioManager.playMenuMusic();
