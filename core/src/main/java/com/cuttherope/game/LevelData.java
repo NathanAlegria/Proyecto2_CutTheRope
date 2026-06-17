@@ -82,19 +82,19 @@ public class LevelData {
 
     private static LevelData level4() {
         return new LevelData(3, "Cuarto Nivel",
-            "Nivel 4 ajustado al video: las estrellas siguen la caída real del dulce para recoger las 3 en una sola partida.",
+            "Nivel 4 ajustado: púas más juntas, hitbox más perdonable y estrellas alineadas al recorrido para poder recoger las 3 en un intento.",
             0, ROPE, BG1, BG2,
             // Se mantiene la misma estructura del nivel.
             new float[]{185, 360, 390, 390},
             new float[]{620, 620, 500, 355},
             200, 500,
             400, 75,
-            // Estrellas movidas al camino que sigue el dulce en el video:
-            // entrada hacia el centro, bajada entre las púas y caída final hacia Om Nom.
-            new float[]{260, 365, 395},
-            new float[]{420, 305, 175},
-            // Se conservan las dos filas de púas.
-            new float[]{315, 350, 435, 470, 315, 350, 435, 470},
+            // Estrellas ubicadas sobre la trayectoria real del dulce:
+            // salida inicial, paso por el hueco central y bajada final hacia Om Nom.
+            new float[]{250, 360, 392},
+            new float[]{425, 300, 205},
+            // Púas más pegadas entre sí, pero dejando un corredor central jugable.
+            new float[]{325, 355, 425, 455, 305, 340, 440, 475},
             new float[]{350, 350, 350, 350, 205, 205, 205, 205},
             new int[]{0, 0, 0, 0, 0, 0, 0, 0},
             3);

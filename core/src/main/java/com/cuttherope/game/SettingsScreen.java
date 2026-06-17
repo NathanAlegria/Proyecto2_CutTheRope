@@ -32,24 +32,24 @@ public class SettingsScreen implements Screen {
     private final Rectangle btnBack      = new Rectangle(18, 18, 140, 40);
 
     // Volumen música
-    private final Rectangle btnMusicDown = new Rectangle(380, 468, 44, 36);
-    private final Rectangle btnMusicUp   = new Rectangle(434, 468, 44, 36);
+    private final Rectangle btnMusicDown = new Rectangle(362, 456, 44, 36);
+    private final Rectangle btnMusicUp   = new Rectangle(416, 456, 44, 36);
 
     // Volumen SFX
-    private final Rectangle btnSfxDown   = new Rectangle(380, 410, 44, 36);
-    private final Rectangle btnSfxUp     = new Rectangle(434, 410, 44, 36);
+    private final Rectangle btnSfxDown   = new Rectangle(362, 398, 44, 36);
+    private final Rectangle btnSfxUp     = new Rectangle(416, 398, 44, 36);
 
     // Toggle música ON/OFF
-    private final Rectangle btnMusicOn   = new Rectangle(530, 468, 86, 36);
+    private final Rectangle btnMusicOn   = new Rectangle(525, 456, 96, 36);
 
     // Toggle SFX ON/OFF
-    private final Rectangle btnSfxOn     = new Rectangle(530, 410, 86, 36);
+    private final Rectangle btnSfxOn     = new Rectangle(525, 398, 96, 36);
 
     // Idioma
-    private final Rectangle btnLang      = new Rectangle(380, 345, 120, 36);
+    private final Rectangle btnLang      = new Rectangle(420, 314, 126, 38);
 
     // Timer
-    private final Rectangle btnTimer     = new Rectangle(380, 290, 90, 36);
+    private final Rectangle btnTimer     = new Rectangle(420, 258, 96, 38);
 
     // Avatares (5)
     private final Rectangle[] btnAvatars = new Rectangle[5];
@@ -69,7 +69,7 @@ public class SettingsScreen implements Screen {
         this.um   = UserManager.getInstance();
 
         for (int i = 0; i < 5; i++) {
-            btnAvatars[i] = new Rectangle(38 + i * 142f, 155, 110, 90);
+            btnAvatars[i] = new Rectangle(24 + i * 151f, 128, 118, 94);
         }
     }
 
@@ -133,14 +133,14 @@ public class SettingsScreen implements Screen {
         sr.setColor(new Color(0.06f, 0.04f, 0.16f, 0.62f));
         sr.rect(20, 390, 760, 150);
         sr.rect(20, 255, 760, 110);
-        sr.rect(20, 110, 760, 125);
+        sr.rect(20, 108, 760, 128);
         sr.end();
 
         sr.begin(ShapeRenderer.ShapeType.Line);
         sr.setColor(new Color(0.46f, 0.28f, 0.82f, 0.95f));
         sr.rect(20, 390, 760, 150);
         sr.rect(20, 255, 760, 110);
-        sr.rect(20, 110, 760, 125);
+        sr.rect(20, 108, 760, 128);
         sr.end();
     }
 
@@ -163,16 +163,16 @@ public class SettingsScreen implements Screen {
         game.batch.begin();
 
         game.font.setColor(new Color(0.9f, 0.75f, 1f, 1f));
-        game.font.draw(game.batch, MainGame.t("Audio"), 30, 520);
+        game.font.draw(game.batch, MainGame.t("Audio"), 30, 515);
 
         game.font.setColor(Color.WHITE);
-        game.font.draw(game.batch, MainGame.t("Música:"), 30, 490);
-        game.font.draw(game.batch, MainGame.t("Efectos:"), 30, 432);
+        game.font.draw(game.batch, MainGame.t("Música:"), 30, 483);
+        game.font.draw(game.batch, MainGame.t("Efectos:"), 30, 425);
 
         game.batch.end();
 
-        drawVolBar(140, 474, 220, musicVol);
-        drawVolBar(140, 416, 220, sfxVol);
+        drawVolBar(150, 468, 190, musicVol);
+        drawVolBar(150, 410, 190, sfxVol);
 
         drawSmallBtn(btnMusicDown, "-");
         drawSmallBtn(btnMusicUp, "+");
@@ -192,11 +192,9 @@ public class SettingsScreen implements Screen {
         );
 
         game.batch.begin();
-
         game.fontSmall.setColor(Color.WHITE);
-        game.fontSmall.draw(game.batch, (int)(musicVol * 100) + "%", 626, 492);
-        game.fontSmall.draw(game.batch, (int)(sfxVol * 100) + "%", 626, 434);
-
+        game.fontSmall.draw(game.batch, (int)(musicVol * 100) + "%", 635, 483);
+        game.fontSmall.draw(game.batch, (int)(sfxVol * 100) + "%", 635, 425);
         game.batch.end();
     }
 
@@ -222,11 +220,11 @@ public class SettingsScreen implements Screen {
         game.batch.begin();
 
         game.font.setColor(new Color(0.9f, 0.75f, 1f, 1f));
-        game.font.draw(game.batch, MainGame.t("Preferencias"), 30, 380);
+        game.font.draw(game.batch, MainGame.t("Preferencias"), 30, 372);
 
         game.font.setColor(Color.WHITE);
-        game.font.draw(game.batch, MainGame.t("Idioma:"), 30, 358);
-        game.font.draw(game.batch, MainGame.t("Timer en pantalla:"), 30, 302);
+        game.font.draw(game.batch, MainGame.t("Idioma:"), 30, 338);
+        game.font.draw(game.batch, MainGame.t("Timer en pantalla:"), 30, 282);
 
         game.batch.end();
 
@@ -248,7 +246,7 @@ public class SettingsScreen implements Screen {
 
         game.batch.begin();
         game.font.setColor(new Color(0.9f, 0.75f, 1f, 1f));
-        game.font.draw(game.batch, MainGame.t("Avatar"), 30, 265);
+        game.font.draw(game.batch, MainGame.t("Avatar"), 30, 248);
         game.batch.end();
 
         for (int i = 0; i < 5; i++) {
@@ -258,9 +256,13 @@ public class SettingsScreen implements Screen {
             sr.begin(ShapeRenderer.ShapeType.Filled);
             sr.setColor(sel ? new Color(0.28f, 0.22f, 0.42f, 1f) : new Color(0.11f, 0.10f, 0.14f, 1f));
             sr.rect(r.x, r.y, r.width, r.height);
+
+            // Panel blanco detrás del Om Nom para que los ojos se vean blancos.
+            sr.setColor(new Color(1f, 1f, 1f, 0.96f));
+            sr.rect(r.x + 14, r.y + 20, r.width - 28, 50);
             sr.end();
 
-            drawOmNomAvatar(r.x + r.width / 2f, r.y + 53, i, AVATAR_COLORS[i]);
+            drawOmNomAvatar(r.x + r.width / 2f, r.y + 52, i, AVATAR_COLORS[i]);
 
             sr.begin(ShapeRenderer.ShapeType.Line);
             sr.setColor(sel ? new Color(1f, 0.85f, 0.2f, 1f) : new Color(0.55f, 0.45f, 0.70f, 1f));
@@ -271,7 +273,7 @@ public class SettingsScreen implements Screen {
             game.fontSmall.setColor(Color.WHITE);
             String avatarLabel = "OmNom" + (i + 1);
             GlyphLayout layout = new GlyphLayout(game.fontSmall, avatarLabel);
-            game.fontSmall.draw(game.batch, avatarLabel, r.x + r.width / 2f - layout.width / 2f, r.y + 18);
+            game.fontSmall.draw(game.batch, avatarLabel, r.x + r.width / 2f - layout.width / 2f, r.y + 16);
             game.batch.end();
         }
     }

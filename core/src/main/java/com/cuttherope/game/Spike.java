@@ -10,8 +10,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 public class Spike {
 
     public float x, y;
-    public float width  = 22f;
-    public float height = 22f;
+    public float width  = 20f;
+    public float height = 20f;
     public int dir; // 0=up, 1=right, 2=left
 
     public Spike(float x, float y, int dir) {
@@ -77,6 +77,7 @@ public class Spike {
         float dx   = candy.position.x - x;
         float dy   = candy.position.y - y;
         float dist = (float) Math.sqrt(dx * dx + dy * dy);
-        return dist < (width * 0.5f + candy.radius * 0.75f);
+        // Hitbox más pequeña para que el nivel 4 sea más justo.
+        return dist < (width * 0.34f + candy.radius * 0.52f);
     }
 }
