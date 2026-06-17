@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector3;
 
 public class MainMenuScreen implements Screen {
     private final MainGame game;
@@ -156,8 +157,10 @@ public class MainMenuScreen implements Screen {
 
     private void handle() {
         if (!Gdx.input.justTouched()) return;
-        float x = Gdx.input.getX() * 800f / Gdx.graphics.getWidth();
-        float y = 700f - Gdx.input.getY() * 700f / Gdx.graphics.getHeight();
+        Vector3 touch = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+        game.viewport.unproject(touch);
+        float x = touch.x;
+        float y = touch.y;
         if (game.audioManager != null) game.audioManager.playClick();
         UserData ud = um.getCurrentUser();
         for (int i = 0; i < levelBtns.length; i++) {

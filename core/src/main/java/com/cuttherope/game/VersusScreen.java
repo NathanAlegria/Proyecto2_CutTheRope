@@ -30,7 +30,9 @@ public class VersusScreen extends SocialScreenBase {
     @Override public void show() {
         sr = new ShapeRenderer();
         if (game.audioManager != null) game.audioManager.playMenuMusic();
-        fondoVs = AssetPaths.textureAnyOrNull(AssetPaths.FONDO_VS, "Imagenes/FondoVS.png", "assets/Imagenes/FondoVS.png", "FondoVS", "FondoVS.jpg", "fondovs.png");
+        fondoVs = AssetPaths.textureAnyOrNull(AssetPaths.FONDO_VS, "FondoVS", "FondoVS.png", "FondoVS.jpg", "Imagenes/FondoVS", "Imagenes/FondoVS.png", "assets/Imagenes/FondoVS", "assets/Imagenes/FondoVS.png", "fondovs.png", AssetPaths.FONDO_MENU, AssetPaths.FONDO);
+        UserData ud = um.getCurrentUser();
+        if (ud != null) game.applyRuntimePreferences(ud);
         reloadLists();
     }
 
@@ -50,13 +52,13 @@ public class VersusScreen extends SocialScreenBase {
 
         drawVsBackground();
         drawHeader();
-        drawTab(tabSolicitudes, "Solicitudes", tab == 0);
-        drawTab(tabVsAmigos, "VS Amigos", tab == 1);
+        drawTab(tabSolicitudes, MainGame.t("Solicitudes"), tab == 0);
+        drawTab(tabVsAmigos, MainGame.t("VS Amigos"), tab == 1);
 
         if (tab == 0) drawSolicitudesPanel();
         else drawVsAmigosPanel();
 
-        drawButton(btnBack, "☰ Menú", new Color(0.22f, 0.12f, 0.10f, 1f), 0);
+        drawButton(btnBack, MainGame.t("← Menú"), new Color(0.22f, 0.12f, 0.10f, 1f), 0);
         handleInput();
     }
 
@@ -82,9 +84,9 @@ public class VersusScreen extends SocialScreenBase {
     private void drawHeader() {
         game.batch.begin();
         game.fontLarge.setColor(new Color(1f, 0.84f, 0.05f, 1f));
-        game.fontLarge.draw(game.batch, "Sistema VS y Amistades", 210, 675);
+        game.fontLarge.draw(game.batch, MainGame.t("Sistema VS y Amistades"), 210, 675);
         game.fontSmall.setColor(new Color(1f, 0.92f, 0.40f, 1f));
-        game.fontSmall.draw(game.batch, "Envía solicitudes, acepta amigos y reta en una partida normal del nivel 1 al 5.", 120, 645);
+        game.fontSmall.draw(game.batch, MainGame.t("Envía solicitudes, acepta amigos y reta en una partida normal del nivel 1 al 5."), 120, 645);
         if (message != null && !message.isEmpty()) {
             game.fontSmall.setColor(new Color(1f, 0.95f, 0.55f, 1f));
             game.fontSmall.draw(game.batch, message, 35, 72);
@@ -113,7 +115,7 @@ public class VersusScreen extends SocialScreenBase {
 
     private void drawSolicitudesPanel() {
         rowButtons.clear(); secondButtons.clear();
-        drawPanel("Jugadores existentes", "USUARIO                         NOMBRE                                      ESTADO");
+        drawPanel(MainGame.t("Jugadores existentes"), MainGame.t("USUARIO                         NOMBRE                                      ESTADO"));
         UserData current = um.getCurrentUser();
         if (current == null) return;
         int row = 0;
@@ -127,12 +129,12 @@ public class VersusScreen extends SocialScreenBase {
             drawButton(actionBtn, status.getButtonText(), (status.canSendRequest() || status.canAcceptRequest()) ? new Color(0.22f, 0.12f, 0.08f, 1f) : new Color(0.13f, 0.09f, 0.07f, 1f), status == FriendshipStatus.FRIEND ? 2 : 0);
             row++;
         }
-        if (row == 0) drawEmpty("No hay jugadores para mostrar.");
+        if (row == 0) drawEmpty(MainGame.t("No hay jugadores para mostrar."));
     }
 
     private void drawVsAmigosPanel() {
         rowButtons.clear(); secondButtons.clear();
-        drawPanel("VS Amigos", "Amigos aceptados arriba. Solicitudes y partidas listas abajo.");
+        drawPanel(MainGame.t("VS Amigos"), MainGame.t("Amigos aceptados arriba. Solicitudes y partidas listas abajo."));
         UserData current = um.getCurrentUser();
         if (current == null) return;
         int row = 0;
@@ -141,14 +143,14 @@ public class VersusScreen extends SocialScreenBase {
             float y = 468 - row * 54;
             Rectangle reto = new Rectangle(590, y - 30, 150, 36);
             rowButtons.add(reto); secondButtons.add(new Rectangle(0,0,0,0));
-            drawPlayerRow(y, row, user.getUsername(), trim(user.getFullName(), 28), "AMIGO", true);
-            drawButton(reto, "Retar VS", new Color(0.22f, 0.12f, 0.08f, 1f), 2);
+            drawPlayerRow(y, row, user.getUsername(), trim(user.getFullName(), 28), MainGame.t("AMIGO"), true);
+            drawButton(reto, MainGame.t("Retar VS"), new Color(0.22f, 0.12f, 0.08f, 1f), 2);
             row++;
         }
 
         game.batch.begin();
-        game.font.setColor(new Color(1f, 0.86f, 0.05f, 1f)); game.font.draw(game.batch, "Partidas VS", 40, 315);
-        game.fontSmall.setColor(new Color(0.84f, 0.68f, 0.32f, 1f)); game.fontSmall.draw(game.batch, "Aceptar / Listo / Jugar cuando ambos estén listos", 40, 296);
+        game.font.setColor(new Color(1f, 0.86f, 0.05f, 1f)); game.font.draw(game.batch, MainGame.t("Partidas VS"), 40, 315);
+        game.fontSmall.setColor(new Color(0.84f, 0.68f, 0.32f, 1f)); game.fontSmall.draw(game.batch, MainGame.t("Aceptar / Listo / Jugar cuando ambos estén listos"), 40, 296);
         game.batch.end();
 
         int matchRow = 0;
@@ -159,17 +161,17 @@ public class VersusScreen extends SocialScreenBase {
             Rectangle b = new Rectangle(625, y - 28, 95, 34);
             rowButtons.add(a); secondButtons.add(b);
             String other = m.otherPlayer(current.getUsername());
-            String status = m.state.name() + " | Tú: " + (m.isReady(current.getUsername()) ? "Listo" : "No listo");
+            String status = m.state.name() + " | " + MainGame.t("Tú:") + " " + (m.isReady(current.getUsername()) ? MainGame.t("Listo") : MainGame.t("No listo"));
             drawMatchRow(y, matchRow, "VS " + other, status);
             String txtA;
-            if (m.state == VersusMatch.State.REQUESTED && m.opponent.equalsIgnoreCase(current.getUsername())) txtA = "Aceptar";
-            else if (m.state == VersusMatch.State.REQUESTED) txtA = "Enviada";
-            else txtA = m.isReady(current.getUsername()) ? "Listo OK" : "Listo";
+            if (m.state == VersusMatch.State.REQUESTED && m.opponent.equalsIgnoreCase(current.getUsername())) txtA = MainGame.t("Aceptar");
+            else if (m.state == VersusMatch.State.REQUESTED) txtA = MainGame.t("Enviada");
+            else txtA = m.isReady(current.getUsername()) ? MainGame.t("Listo OK") : MainGame.t("Listo");
             drawButton(a, txtA, new Color(0.22f, 0.12f, 0.08f, 1f), 0);
-            drawButton(b, m.hasBothReady() ? "Jugar" : "Espera", m.hasBothReady() ? new Color(0.12f, 0.35f, 0.12f, 1f) : new Color(0.13f, 0.09f, 0.07f, 1f), m.hasBothReady() ? 2 : 0);
+            drawButton(b, m.hasBothReady() ? MainGame.t("Jugar") : MainGame.t("Espera"), m.hasBothReady() ? new Color(0.12f, 0.35f, 0.12f, 1f) : new Color(0.13f, 0.09f, 0.07f, 1f), m.hasBothReady() ? 2 : 0);
             matchRow++;
         }
-        if (friends.isEmpty() && matches.isEmpty()) drawEmpty("Primero acepta o envía una solicitud de amistad.");
+        if (friends.isEmpty() && matches.isEmpty()) drawEmpty(MainGame.t("Primero acepta o envía una solicitud de amistad."));
     }
 
     private void drawPlayerRow(float y, int row, String username, String name, String status, boolean friend) {
@@ -259,7 +261,7 @@ public class VersusScreen extends SocialScreenBase {
             if (index >= rowButtons.size()) break;
             if (rowButtons.get(index).contains(x, y)) {
                 if (m.state == VersusMatch.State.REQUESTED && m.opponent.equalsIgnoreCase(current.getUsername())) message = um.acceptVersusRequest(m.id);
-                else if (m.state == VersusMatch.State.REQUESTED) message = "Esperando que el amigo acepte la partida.";
+                else if (m.state == VersusMatch.State.REQUESTED) message = MainGame.t("Esperando que el amigo acepte la partida.");
                 else message = um.setVersusReady(m.id);
                 reloadLists(); return;
             }
@@ -269,7 +271,7 @@ public class VersusScreen extends SocialScreenBase {
                     VersusModeContext.start(fresh.id);
                     game.setScreen(new GameScreen(game, 0));
                     dispose();
-                } else message = "Aún falta que ambos presionen Listo.";
+                } else message = MainGame.t("Aún falta que ambos presionen Listo.");
                 reloadLists(); return;
             }
             index++;

@@ -46,7 +46,7 @@ public class StatsScreen implements Screen {
     @Override
     public void show() {
         sr = new ShapeRenderer();
-        fondo = AssetPaths.textureAnyOrNull("FondoStat.jpeg", "FondoStat.jpg", "FondoStat.png", "Imagenes/FondoStat.jpeg", "Imagenes/FondoStat.jpg", "assets/FondoStat.jpeg", "assets/Imagenes/FondoStat.jpeg");
+        fondo = AssetPaths.textureAnyOrNull("FondoStat", "FondoStat.png", "FondoStat.jpeg", "FondoStat.jpg", "Imagenes/FondoStat", "Imagenes/FondoStat.png", "Imagenes/FondoStat.jpeg", "Imagenes/FondoStat.jpg", "assets/FondoStat", "assets/Imagenes/FondoStat", "assets/Imagenes/FondoStat.png", "assets/Imagenes/FondoStat.jpeg", AssetPaths.FONDO_MENU, AssetPaths.FONDO);
         if (game.audioManager != null) game.audioManager.playMenuMusic();
         if (ud != null) game.applyRuntimePreferences(ud);
     }
@@ -185,7 +185,7 @@ public class StatsScreen implements Screen {
 
         game.batch.begin();
         game.font.setColor(new Color(1f, 0.84f, 0.20f, 1f));
-        game.font.draw(game.batch, "Historial de partidas VS:", 128, 245);
+        game.font.draw(game.batch, MainGame.t("Historial de partidas VS:"), 128, 245);
         game.batch.end();
 
         if (ud == null) return;
@@ -193,9 +193,9 @@ public class StatsScreen implements Screen {
         game.batch.begin();
         game.fontSmall.setColor(new Color(1f, 0.92f, 0.45f, 1f));
         game.fontSmall.draw(game.batch,
-                "VS jugados: " + ud.getVersusPlayed()
-                        + "   Ganados: " + ud.getVersusWins()
-                        + "   Perdidos: " + ud.getVersusLosses(),
+                MainGame.t("VS jugados:") + " " + ud.getVersusPlayed()
+                        + "   " + MainGame.t("Ganados:") + " " + ud.getVersusWins()
+                        + "   " + MainGame.t("Perdidos:") + " " + ud.getVersusLosses(),
                 128, 220);
         game.batch.end();
 
@@ -203,7 +203,7 @@ public class StatsScreen implements Screen {
         if (vs == null || vs.isEmpty()) {
             game.batch.begin();
             game.fontSmall.setColor(new Color(0.82f, 0.82f, 0.88f, 1f));
-            game.fontSmall.draw(game.batch, "Aún no tienes partidas VS terminadas.", 130, 186);
+            game.fontSmall.draw(game.batch, MainGame.t("Aún no tienes partidas VS terminadas."), 130, 186);
             game.batch.end();
             return;
         }
@@ -328,17 +328,17 @@ public class StatsScreen implements Screen {
     private String buildVsMessage(UserData.VersusHistoryRecord vr) {
         String winner = vr.winner == null ? "Empate" : vr.winner;
         String loser;
-        if ("Empate".equalsIgnoreCase(winner)) loser = "sin ganador";
+        if ("Empate".equalsIgnoreCase(winner)) loser = MainGame.t("sin ganador");
         else loser = winner.equalsIgnoreCase(ud.getUsername()) ? vr.opponent : ud.getUsername();
         int totalPossible = vr.totalPossibleStars > 0 ? vr.totalPossibleStars : 15;
         int starsToShow = vr.winnerStars > 0 ? vr.winnerStars : vr.stars;
         long timeToShow = vr.winnerTimeMs > 0 ? vr.winnerTimeMs : vr.timeMs;
         String result = "Empate".equalsIgnoreCase(winner)
-                ? "Empate contra " + vr.opponent
-                : winner + " le ganó a " + loser;
-        return result + " | Estrellas: " + starsToShow + "/" + totalPossible
-                + " | Tiempo: " + formatTime(timeToShow)
-                + " | Fecha: " + SDF.format(vr.playedAt);
+                ? MainGame.t("Empate contra") + " " + vr.opponent
+                : winner + " " + MainGame.t("le ganó a") + " " + loser;
+        return result + " | " + MainGame.t("Estrellas:") + " " + starsToShow + "/" + totalPossible
+                + " | " + MainGame.t("Tiempo:") + " " + formatTime(timeToShow)
+                + " | " + MainGame.t("Fecha:") + " " + SDF.format(vr.playedAt);
     }
 
     private String starsToText(int n) {

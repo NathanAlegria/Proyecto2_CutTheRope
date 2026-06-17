@@ -32,7 +32,7 @@ public class RankingScreen implements Screen {
     @Override
     public void show() {
         sr = new ShapeRenderer();
-        fondo = AssetPaths.textureAnyOrNull("FondoStat.jpeg", "FondoStat.jpg", "FondoStat.png", "Imagenes/FondoStat.jpeg", "Imagenes/FondoStat.jpg", "assets/FondoStat.jpeg", "assets/Imagenes/FondoStat.jpeg");
+        fondo = AssetPaths.textureAnyOrNull("FondoStat", "FondoStat.png", "FondoStat.jpeg", "FondoStat.jpg", "Imagenes/FondoStat", "Imagenes/FondoStat.png", "Imagenes/FondoStat.jpeg", "Imagenes/FondoStat.jpg", "assets/FondoStat", "assets/Imagenes/FondoStat", "assets/Imagenes/FondoStat.png", "assets/Imagenes/FondoStat.jpeg", AssetPaths.FONDO_MENU, AssetPaths.FONDO);
 
         if (game.audioManager != null) {
             game.audioManager.playMenuMusic();

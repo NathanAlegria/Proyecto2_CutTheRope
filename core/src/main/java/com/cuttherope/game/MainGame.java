@@ -1,6 +1,7 @@
 package com.cuttherope.game;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -31,6 +32,8 @@ public class MainGame extends Game {
     // Dimensiones de la ventana virtual
     public static final int VIRTUAL_WIDTH  = 800;
     public static final int VIRTUAL_HEIGHT = 700;
+    public static final int WINDOW_WIDTH   = 1000;
+    public static final int WINDOW_HEIGHT  = 1200;
 
     // Versión del juego
     public static final String VERSION = "1.0";
@@ -124,6 +127,41 @@ public class MainGame extends Game {
             translations.put("Mapa de niveles", "Level map");
             translations.put("Selecciona un nivel", "Select a level");
             translations.put("VS", "VS");
+            // Estadísticas / VS / textos agregados
+            translations.put("Historial normal:", "Normal game history:");
+            translations.put("Historial de partidas VS:", "VS game history:");
+            translations.put("VS jugados:", "VS played:");
+            translations.put("Ganados:", "Won:");
+            translations.put("Perdidos:", "Lost:");
+            translations.put("Aún no tienes partidas VS terminadas.", "You do not have finished VS matches yet.");
+            translations.put("Empate", "Draw");
+            translations.put("sin ganador", "no winner");
+            translations.put("Empate contra", "Draw against");
+            translations.put("le ganó a", "defeated");
+            translations.put("Fecha:", "Date:");
+            translations.put("Sistema VS y Amistades", "VS and Friends System");
+            translations.put("Envía solicitudes, acepta amigos y reta en una partida normal del nivel 1 al 5.", "Send requests, accept friends and challenge them in a normal match from level 1 to 5.");
+            translations.put("Solicitudes", "Requests");
+            translations.put("VS Amigos", "VS Friends");
+            translations.put("Jugadores existentes", "Existing players");
+            translations.put("USUARIO                         NOMBRE                                      ESTADO", "USERNAME                        NAME                                      STATUS");
+            translations.put("No hay jugadores para mostrar.", "There are no players to show.");
+            translations.put("Amigos aceptados arriba. Solicitudes y partidas listas abajo.", "Accepted friends above. Requests and ready matches below.");
+            translations.put("Retar VS", "Challenge VS");
+            translations.put("Partidas VS", "VS Matches");
+            translations.put("Aceptar / Listo / Jugar cuando ambos estén listos", "Accept / Ready / Play when both are ready");
+            translations.put("AMIGO", "FRIEND");
+            translations.put("Tú:", "You:");
+            translations.put("Listo", "Ready");
+            translations.put("No listo", "Not ready");
+            translations.put("Aceptar", "Accept");
+            translations.put("Enviada", "Sent");
+            translations.put("Listo OK", "Ready OK");
+            translations.put("Jugar", "Play");
+            translations.put("Espera", "Wait");
+            translations.put("Primero acepta o envía una solicitud de amistad.", "First accept or send a friend request.");
+            translations.put("Esperando que el amigo acepte la partida.", "Waiting for your friend to accept the match.");
+            translations.put("Aún falta que ambos presionen Listo.", "Both players still need to press Ready.");
             translations.put("Salir", "Exit");
             translations.put("Segundo Nivel", "Second Level");
             translations.put("Cuarto Nivel", "Fourth Level");
@@ -177,6 +215,9 @@ public class MainGame extends Game {
 
     @Override
     public void create() {
+        // Ventana fija solicitada: no pantalla completa, 1000 x 1200.
+        Gdx.graphics.setWindowedMode(WINDOW_WIDTH, WINDOW_HEIGHT);
+
         batch = new SpriteBatch();
 
         // Cámara y viewport virtual
